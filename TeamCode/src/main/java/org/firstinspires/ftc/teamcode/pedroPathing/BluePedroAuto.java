@@ -56,7 +56,7 @@ public class BluePedroAuto extends OpMode {
     PathState pathState;
 
     public void buildPaths() {
-        endPoint = follower.pathBuilder() // returns the robot to start
+        endPoint = follower.pathBuilder() // returns the robot pickup1Pose to end off shooting line
                 .addPath(new BezierLine(shootPoint, pickup1Pose))
                 .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
                 .build();
@@ -67,14 +67,10 @@ public class BluePedroAuto extends OpMode {
         pickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(shootPoint, pickup1Pose))
                 .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading(), 0.4) // get angle sooner
-                //.setGlobalDeceleration(0.5)
-                //.setBrakingStart(0.4)
-                .build();
+               .build();
         endPickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(pickup1Pose, endPickup1Pose))
                 .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading(), 0.4) // get angle sooner
-//                .setGlobalDeceleration(0.5)
-//                .setBrakingStart(0.4)
                 .build();
         score1 = follower.pathBuilder() // moves from pickup 1 > scoring position
                 .addPath(new BezierLine(endPickup1Pose, shootPoint))
@@ -103,7 +99,6 @@ public class BluePedroAuto extends OpMode {
                 if(pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()){
                     // just scored preload, drive to pickup point 1
                     follower.followPath(pickup1);
-//                    follower.setMaxPower(0.5); // slows down permanently
                     setPathState(PathState.DRIVE_PICKUP1);
                 }
                 break;
