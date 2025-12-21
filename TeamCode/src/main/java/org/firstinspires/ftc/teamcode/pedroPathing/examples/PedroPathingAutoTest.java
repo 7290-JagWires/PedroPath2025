@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.examples;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierCurve;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -12,6 +13,7 @@ import com.pedropathing.util.Timer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 @Autonomous(name = "PedroAutoExample", group = "Pedro")
+@Disabled
 public class PedroPathingAutoTest extends OpMode {
     private Follower follower;
     private Timer pathTimer, opModeTimer;

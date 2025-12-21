@@ -28,11 +28,9 @@ public class BluePedroAuto extends OpMode {
     private final Pose startPose = new Pose(17, 115, Math.toRadians(30));
     private final Pose shootPoint = new Pose(59, 85, Math.toRadians(155));
     private final Pose pickup1Pose = new Pose(42, 83, Math.toRadians(180));
-    private final Pose endPickup1Pose = new Pose(24, 83, Math.toRadians(180));
-    private final Pose pickup2Pose = new Pose(41, 59, Math.toRadians(180));
-    private final Pose endPickup2Pose = new Pose(25, 60, Math.toRadians(180));
-    private final Pose endAuto1Pose = new Pose(24, 85, Math.toRadians(180));
-    //Point=Pose
+    private final Pose endPickup1Pose = new Pose(18, 83, Math.toRadians(180));
+    private final Pose pickup2Pose = new Pose(42, 60, Math.toRadians(180));
+    private final Pose endPickup2Pose = new Pose(18, 60, Math.toRadians(180));
 
 
     // ---------- Paths--------
@@ -66,29 +64,29 @@ public class BluePedroAuto extends OpMode {
                 .build();
         pickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(shootPoint, pickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading(), 0.4) // get angle sooner
+                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
                .build();
         endPickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(pickup1Pose, endPickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading(), 0.4) // get angle sooner
+                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
                 .build();
         score1 = follower.pathBuilder() // moves from pickup 1 > scoring position
                 .addPath(new BezierLine(endPickup1Pose, shootPoint))
-                .setLinearHeadingInterpolation(endPickup1Pose.getHeading(), shootPoint.getHeading(),0.8) //0.8 is suggested
+                .setLinearHeadingInterpolation(endPickup1Pose.getHeading(), shootPoint.getHeading())
                 .build();
         pickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
                 // use a curve to we can line up better for the balls
                 .addPath(new BezierLine(shootPoint, pickup2Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup2Pose.getHeading(),0.4) // get angle sooner
+                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup2Pose.getHeading())
                 .build();
         endPickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
                 // use a curve to we can line up better for the balls
                 .addPath(new BezierLine(pickup2Pose, endPickup2Pose))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), endPickup2Pose.getHeading(),0.4) // get angle sooner
+                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), endPickup2Pose.getHeading())
                 .build();
         score2 = follower.pathBuilder() // moves from pickup 2 > scoring position
                 .addPath(new BezierLine(endPickup2Pose, shootPoint))
-                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPoint.getHeading(), 0.8)
+                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPoint.getHeading())
                 .build();
         }
 
