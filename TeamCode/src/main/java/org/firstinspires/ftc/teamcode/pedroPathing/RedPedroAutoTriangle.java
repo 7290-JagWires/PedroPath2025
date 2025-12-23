@@ -26,10 +26,10 @@ public class RedPedroAutoTriangle extends OpMode {
      */
     private final Pose startPose = new Pose(56, 135, Math.toRadians(-90));
     private final Pose shootPoint = new Pose(56, 126, Math.toRadians(-110));
-    private final Pose pickup1Pose = new Pose(42, 107, Math.toRadians(180));
-    private final Pose endPickup1Pose = new Pose(23, 107, Math.toRadians(180));
-    private final Pose pickup2Pose = new Pose(42, 84, Math.toRadians(180));
-    private final Pose endPickup2Pose = new Pose(23, 84, Math.toRadians(180));
+    private final Pose pickup1Pose = new Pose(37, 109, Math.toRadians(180));
+    private final Pose endPickup1Pose = new Pose(21, 109, Math.toRadians(180));
+    private final Pose pickup2Pose = new Pose(37, 86, Math.toRadians(180));
+    private final Pose endPickup2Pose = new Pose(21, 86, Math.toRadians(180));
 
 
     // ---------- Paths--------
@@ -143,7 +143,7 @@ public class RedPedroAutoTriangle extends OpMode {
                 // scored. drive to pickup point 1
                 if(!follower.isBusy()) {
                     follower.followPath(endPickup1);
-                    follower.setMaxPower(.25);
+                    follower.setMaxPower(.3);
                     pathState = PathState.DRIVE_PICKUP1_END;
                 }
                 break;
@@ -151,7 +151,7 @@ public class RedPedroAutoTriangle extends OpMode {
                 // scored, drive to pickup point 2
                 if(!follower.isBusy()) {
                     follower.followPath(endPickup2);
-                    follower.setMaxPower(.25);
+                    follower.setMaxPower(.3);
                     pathState = PathState.DRIVE_PICKUP2_END;
                 }
                 break;
