@@ -8,7 +8,7 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "PedroAutoBlue", group = "Pedro")
+@Autonomous(name = "Blue Auto Goal", group = "Pedro")
 public class BluePedroAutoGoal extends OpMode {
     private Follower follower;
     private Timer pathTimer, opModeTimer;
@@ -26,10 +26,10 @@ public class BluePedroAutoGoal extends OpMode {
      */
     private final Pose startPose = new Pose(17, 115, Math.toRadians(25));
     private final Pose shootPoint = new Pose(59, 85, Math.toRadians(155));
-    private final Pose pickup2Pose = new Pose(42, 83, Math.toRadians(180));
-    private final Pose endPickup2Pose = new Pose(23, 83, Math.toRadians(180));
-    private final Pose pickup1Pose = new Pose(42, 60, Math.toRadians(180));
-    private final Pose endPickup1Pose = new Pose(23, 60, Math.toRadians(180));
+    private final Pose pickup1Pose = new Pose(42, 83, Math.toRadians(180));
+    private final Pose endPickup1Pose = new Pose(23, 83, Math.toRadians(180));
+    private final Pose pickup2Pose = new Pose(42, 60, Math.toRadians(180));
+    private final Pose endPickup2Pose = new Pose(23, 60, Math.toRadians(180));
 
 
     // ---------- Paths--------
