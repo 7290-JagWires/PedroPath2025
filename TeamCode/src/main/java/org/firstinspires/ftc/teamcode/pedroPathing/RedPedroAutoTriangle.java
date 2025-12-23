@@ -63,11 +63,11 @@ public class RedPedroAutoTriangle extends OpMode {
                 .build();
         pickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(shootPoint, pickup1Pose))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose.getHeading())
-               .build();
+                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
+                .build();
         endPickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(pickup1Pose, endPickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
+                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose.getHeading())
                 .build();
         score1 = follower.pathBuilder() // moves from pickup 1 > scoring position
                 .addPath(new BezierLine(endPickup1Pose, shootPoint))
