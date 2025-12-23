@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -9,8 +8,8 @@ import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
-@Autonomous(name = "PedroAutoBlue", group = "Pedro")
-public class BluePedroAuto extends OpMode {
+@Autonomous(name = "RedPedroAutoGoal", group = "Pedro")
+public class RedPedroAutoGoal extends OpMode {
     private Follower follower;
     private Timer pathTimer, opModeTimer;
 
@@ -25,12 +24,12 @@ public class BluePedroAuto extends OpMode {
     Think of Poses like a set position on the field. we have several "important" positions to keep track of here
     so we write them down here.
      */
-    private final Pose startPose = new Pose(17, 115, Math.toRadians(30));
-    private final Pose shootPoint = new Pose(59, 85, Math.toRadians(155));
-    private final Pose pickup1Pose = new Pose(42, 83, Math.toRadians(180));
-    private final Pose endPickup1Pose = new Pose(18, 83, Math.toRadians(180));
-    private final Pose pickup2Pose = new Pose(42, 60, Math.toRadians(180));
-    private final Pose endPickup2Pose = new Pose(18, 60, Math.toRadians(180));
+    private final Pose startPose = new Pose(17, 29, Math.toRadians(-25));
+    private final Pose shootPoint = new Pose(59, 59, Math.toRadians(-155));
+    private final Pose pickup2Pose = new Pose(42, 61, Math.toRadians(-180));
+    private final Pose endPickup2Pose = new Pose(23, 61, Math.toRadians(-180));
+    private final Pose pickup1Pose = new Pose(42, 84, Math.toRadians(-180));
+    private final Pose endPickup1Pose = new Pose(23, 84, Math.toRadians(-180));
 
 
     // ---------- Paths--------
@@ -64,7 +63,7 @@ public class BluePedroAuto extends OpMode {
                 .build();
         pickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(shootPoint, pickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
+                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose.getHeading())
                .build();
         endPickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
                 .addPath(new BezierLine(pickup1Pose, endPickup1Pose))
@@ -77,7 +76,7 @@ public class BluePedroAuto extends OpMode {
         pickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
                 // use a curve to we can line up better for the balls
                 .addPath(new BezierLine(shootPoint, pickup2Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup2Pose.getHeading())
+                .setLinearHeadingInterpolation( pickup2Pose.getHeading(), pickup2Pose.getHeading())
                 .build();
         endPickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
                 // use a curve to we can line up better for the balls
