@@ -1,18 +1,39 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static java.lang.Thread.sleep;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.SpindexerMotor;
+import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
+import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 
 @Autonomous(name = "Blue Auto Goal", group = "Pedro")
 public class BluePedroAutoGoal extends OpMode {
     private Follower follower;
     private Timer pathTimer, opModeTimer;
-
+    ElapsedTime dumpTimer = new ElapsedTime();
+    boolean isDumping = false;
+    int dumpCount = 0;
+    private static final int LAUNCH_DELAY_MILLISECONDS = 1500;
+    private static final int TICKS_PER_COMPARTMENT = 1354;   // <— update with real measured value
+    public IntakeActive intakeActive;
+    public Shooter shooter;
+    public Door door;
+    public SpindexerMotor spindexerMotor;
+    public MagneticLimitSwitch spindexerMag;
+    public SpindexerIndexerLogic spindexerLogic;
 
     /* ------ init Poses --------
     Pedro is based on a 0-144 grid, the same size as the FTC field in inches.
@@ -93,7 +114,19 @@ public class BluePedroAutoGoal extends OpMode {
         switch(pathState) {
             case SCORE_PRELOAD:
                 //TODO: run standard scoring state machine here
-                if(pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()){
+                if (!isDumping) {
+                    startDumping();
+                }
+
+                // The dumpItems() method is now called from the main loop()
+                // so we just wait until it's finished.
+                if (!isDumping && !follower.isBusy()){
+                    // just scored preload, drive to pickup point 1
+                    follower.followPath(pickup1);
+                    setPathState(PathState.DRIVE_PICKUP1);
+                }
+
+                if (pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()){
                     // just scored preload, drive to pickup point 1
                     follower.followPath(pickup1);
                     setPathState(PathState.DRIVE_PICKUP1);
@@ -166,14 +199,31 @@ public class BluePedroAutoGoal extends OpMode {
         pathTimer.resetTimer();
     }
     @Override
+
     public void init() {
         // set initial state
         pathState = PathState.DRIVE_START_SCORE;
         pathTimer = new Timer();
         opModeTimer = new Timer();
         opModeTimer.resetTimer();
+
         follower = Constants.createFollower(hardwareMap);
+
         //TODO: add in any other Init statements here for other hardware, shooters, etc.
+        intakeActive = new IntakeActive(this);
+        shooter      = new Shooter(this);
+        door         = new Door(this);
+
+        // Spindexer + magnetic sensor
+        spindexerMotor = new SpindexerMotor(hardwareMap);
+        spindexerMag   = new MagneticLimitSwitch(hardwareMap, "magnetic_limit_sensor");
+        spindexerLogic = new SpindexerIndexerLogic(
+                this,
+                spindexerMotor,
+                spindexerMag,
+                TICKS_PER_COMPARTMENT
+        );
+
         buildPaths();
         follower.setStartingPose(startPose);
     }
@@ -188,6 +238,11 @@ public class BluePedroAutoGoal extends OpMode {
         // update state machine + odometry
         follower.update();
         autonomousPathUpdate();
+
+        // Call the updated dump logic from the main loop
+        if (isDumping) {
+            dumpItems();
+        }
         // give data back to drivers
         telemetry.addData("path state", pathState.toString());
         telemetry.addData("x", follower.getPose().getX());
@@ -195,5 +250,46 @@ public class BluePedroAutoGoal extends OpMode {
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.addData("Path time", pathTimer.getElapsedTimeSeconds());
     }
+
+    // Call this method to START the dumping process
+    void startDumping() {
+        shooter.run(); // Start the shooter motor
+        dumpTimer.reset();
+        isDumping = true;
+        dumpCount = 0;
+    }
+    void dumpItems() {
+        // Step 1: Wait for the shooter to spin up
+        if (dumpTimer.milliseconds() < LAUNCH_DELAY_MILLISECONDS) {
+            // Still waiting for the shooter to get to speed, do nothing else
+            return;
+        }
+
+        // Step 2: Sequentially launch items
+        if (dumpCount < 3) {
+            door.forceOpenLock(); // Keep the door open
+
+            // If the spindexer is at the correct position (limit switch pressed)
+            if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                // and enough time has passed to let the item settle and shoot...
+                if (dumpTimer.milliseconds() > 500) { // 500ms delay to shoot and settle
+                    dumpCount++;
+                    telemetry.addLine("dumpCount: " + dumpCount);
+                    if (dumpCount < 3) {
+                        // Move to the next compartment if we are not done
+                        spindexerLogic.nextCompartment();
+                        dumpTimer.reset(); // Reset timer for the next item
+                    }
+                }
+            }
+        } else {
+            // Step 3: We are done dumping
+            isDumping = false;
+            shooter.stopFast(); // Stop the shooter
+            door.closeDoor();   // Close the door
+            // Now you can proceed to the next state in your autonomous path
+        }
+    }
+
 }
 
