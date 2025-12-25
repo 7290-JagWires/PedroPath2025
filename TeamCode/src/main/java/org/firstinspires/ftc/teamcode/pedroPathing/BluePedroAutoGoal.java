@@ -299,6 +299,7 @@ public class BluePedroAutoGoal extends OpMode {
 
         // give data back to drivers
         telemetry.addData("path state", pathState.toString());
+        telemetry.addData("dump state", dumpState.toString());
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
@@ -335,6 +336,7 @@ public class BluePedroAutoGoal extends OpMode {
 
         switch (dumpState) {
             case IDLE:
+
                 break;
             case SPIN_UP:
                 if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
