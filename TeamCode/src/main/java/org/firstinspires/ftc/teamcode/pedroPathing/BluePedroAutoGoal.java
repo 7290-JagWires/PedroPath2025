@@ -84,7 +84,7 @@ public class BluePedroAutoGoal extends OpMode {
     /**
      * Constructs the various autonomous paths the robot will follow.
      * This method initializes all the {@link PathChain} objects used in the autonomous routine.
-     * It uses a {@link com.pedropathing.follower.PathBuilder} to define a sequence of movements
+     * It uses a to define a sequence of movements
      * between predefined {@link Pose} coordinates on the field.
      * <p>
      * Paths are built for the following actions:
