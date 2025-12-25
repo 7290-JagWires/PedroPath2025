@@ -27,6 +27,7 @@ public class BluePedroAutoGoal extends OpMode {
     boolean isDumping = false;
     int dumpCount = 0;
     static final int TOTAL_DUMPS = 3;
+    static final double DOOR_TIMER_DELAY = 2.5;  //Just a delay to make sure robot is set before opening door
     static final int SHOOTER_SPINUP_MS = 1500;
     static final int LAUNCH_DELAY_MS = 500;
     private static final int LAUNCH_DELAY_MILLISECONDS = 1500;
@@ -160,40 +161,45 @@ public class BluePedroAutoGoal extends OpMode {
     public void autonomousPathUpdate() {
         switch(pathState) {
             case SCORE_PRELOAD:
-                dumpItemsSM();
-
-                if (dumpState == DumpState.FINISHED) {
-                    startDump();
-                    if (pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()) {
-                        // just scored preload, drive to pickup point 1
-                        follower.followPath(pickup1);
-                        setPathState(PathState.DRIVE_PICKUP1);
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    dumpItemsSM();
+                    if (dumpState == DumpState.FINISHED) {
+                        startDump();
+                        if (pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()) {
+                            // just scored preload, drive to pickup point 1
+                            follower.followPath(pickup1);
+                            setPathState(PathState.DRIVE_PICKUP1);
+                        }
                     }
                 }
                 break;
             case SCORE1:
-                dumpItemsSM();
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    dumpItemsSM();
 
-                if (dumpState == DumpState.FINISHED) {
-                    startDump();
-                    if(pathTimer.getElapsedTimeSeconds() > 5 && !follower.isBusy()) {
-                        // scored pickup 1, drive to pickup 2
-                        follower.followPath(pickup2);
-                        follower.setMaxPower(1);
-                        setPathState(PathState.DRIVE_PICKUP2);
+                    if (dumpState == DumpState.FINISHED) {
+                        startDump();
+                        if (pathTimer.getElapsedTimeSeconds() > 5 && !follower.isBusy()) {
+                            // scored pickup 1, drive to pickup 2
+                            follower.followPath(pickup2);
+                            follower.setMaxPower(1);
+                            setPathState(PathState.DRIVE_PICKUP2);
+                        }
                     }
                 }
                 break;
             case SCORE2:
-                dumpItemsSM();
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    dumpItemsSM();
 
-                if (dumpState == DumpState.FINISHED) {
-                    shooter.stop();         //Turn off the shooter when we finish auto
-                    if(pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
-                        // end state machine
-                        follower.followPath(endPoint);
-                        follower.setMaxPower(1);
-                        setPathState(PathState.END);
+                    if (dumpState == DumpState.FINISHED) {
+                        shooter.stop();         //Turn off the shooter when we finish auto
+                        if (pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
+                            // end state machine
+                            follower.followPath(endPoint);
+                            follower.setMaxPower(1);
+                            setPathState(PathState.END);
+                        }
                     }
                 }
                 break;
@@ -204,7 +210,17 @@ public class BluePedroAutoGoal extends OpMode {
                 follower.followPath(scorePreload, true);
                 follower.setMaxPower(1);
                 setPathState(PathState.SCORE_PRELOAD);
+                break;
 
+            case DRIVE_PICKUP1:
+                // scored. drive to pickup point 1
+                door.forceClose();
+
+                if(!follower.isBusy()) {
+                    follower.followPath(endPickup1);
+                    follower.setMaxPower(.25);
+                    pathState = PathState.DRIVE_PICKUP1_END;
+                }
                 break;
             case DRIVE_PICKUP1_END:
                 if(!follower.isBusy()) {
@@ -212,6 +228,16 @@ public class BluePedroAutoGoal extends OpMode {
                     follower.followPath(score1, true);
                     follower.setMaxPower(1);
                     pathState = PathState.SCORE1;
+                }
+                break;
+            case DRIVE_PICKUP2:
+                // scored, drive to pickup point 2
+                door.forceClose();
+
+                if(!follower.isBusy()) {
+                    follower.followPath(endPickup2);
+                    follower.setMaxPower(.25);
+                    pathState = PathState.DRIVE_PICKUP2_END;
                 }
                 break;
             case DRIVE_PICKUP2_END:
@@ -222,23 +248,6 @@ public class BluePedroAutoGoal extends OpMode {
                     pathState = PathState.SCORE2;
                 }
                 break;
-            case DRIVE_PICKUP1:
-                // scored. drive to pickup point 1
-                if(!follower.isBusy()) {
-                    follower.followPath(endPickup1);
-                    follower.setMaxPower(.25);
-                    pathState = PathState.DRIVE_PICKUP1_END;
-                }
-                break;
-            case DRIVE_PICKUP2:
-                // scored, drive to pickup point 2
-                if(!follower.isBusy()) {
-                    follower.followPath(endPickup2);
-                    follower.setMaxPower(.25);
-                    pathState = PathState.DRIVE_PICKUP2_END;
-                }
-                break;
-
             default:
                 break;
         }
