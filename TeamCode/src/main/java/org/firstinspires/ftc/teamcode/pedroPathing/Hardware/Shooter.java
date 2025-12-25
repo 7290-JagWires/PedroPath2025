@@ -48,6 +48,9 @@ public class Shooter {
             shooter.setPower(SHOOTER_FORWARD);
         }
     }
+    public void stop() {
+        shooter.setPower(SHOOTER_OFF);
+    }
 
     // -------------------------------------------------------------
     // ACTIVE BRAKING (FAST STOP)

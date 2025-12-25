@@ -8,7 +8,6 @@ import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -23,9 +22,13 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 public class BluePedroAutoGoal extends OpMode {
     private Follower follower;
     private Timer pathTimer, opModeTimer;
+    ElapsedTime launchTimer = new ElapsedTime();
     ElapsedTime dumpTimer = new ElapsedTime();
     boolean isDumping = false;
     int dumpCount = 0;
+    static final int TOTAL_DUMPS = 3;
+    static final int SHOOTER_SPINUP_MS = 1500;
+    static final int LAUNCH_DELAY_MS = 500;
     private static final int LAUNCH_DELAY_MILLISECONDS = 1500;
     private static final int TICKS_PER_COMPARTMENT = 1354;   // <— update with real measured value
     public IntakeActive intakeActive;
@@ -68,11 +71,35 @@ public class BluePedroAutoGoal extends OpMode {
         DRIVE_PICKUP2,
         DRIVE_PICKUP2_END,
         END
-
-
     };
     PathState pathState;
+    public enum DumpState {
+        IDLE,
+        SPIN_UP,
+        DUMPING,
+        FINISHED
+    }
+    DumpState dumpState;
 
+    /**
+     * Constructs the various autonomous paths the robot will follow.
+     * This method initializes all the {@link PathChain} objects used in the autonomous routine.
+     * It uses a {@link com.pedropathing.follower.PathBuilder} to define a sequence of movements
+     * between predefined {@link Pose} coordinates on the field.
+     * <p>
+     * Paths are built for the following actions:
+     * <ul>
+     *     <li>{@code scorePreload}: Move from the starting position to the shooting point.</li>
+     *     <li>{@code pickup1} & {@code endPickup1}: Move from the shooting point to the first pickup location.</li>
+     *     <li>{@code score1}: Return from the first pickup location to the shooting point.</li>
+     *     <li>{@code pickup2} & {@code endPickup2}: Move from the shooting point to the second pickup location.</li>
+     *     <li>{@code score2}: Return from the second pickup location to the shooting point.</li>
+     *     <li>{@code endPoint}: A final parking path.</li>
+     * </ul>
+     * Each path segment uses {@link BezierLine} for movement and {@code setLinearHeadingInterpolation}
+     * to control the robot's orientation during the path. This method should be called during initialization
+     * after the {@code follower} has been created.
+     */
     public void buildPaths() {
         endPoint = follower.pathBuilder() // returns the robot pickup1Pose to end off shooting line
                 .addPath(new BezierLine(shootPoint, pickup1Pose))
@@ -110,51 +137,74 @@ public class BluePedroAutoGoal extends OpMode {
                 .build();
         }
 
+    /**
+     * Manages the robot's movement and actions during the autonomous period using a state machine.
+     * This method is called repeatedly in the {@code loop()} method to progress the robot through
+     * a sequence of predefined paths and actions. The state machine transitions between driving to
+     * different locations (like the scoring position and pickup zones) and executing tasks such as
+     * scoring balls. The current state is tracked by the {@code pathState} variable.
+     *
+     * <p>The states handle the following logic:
+     * <ul>
+     *     <li><b>DRIVE_START_SCORE:</b> Initiates the first move from the start pose to the shooting position.</li>
+     *     <li><b>SCORE_PRELOAD:</b> Executes the scoring routine for the preloaded balls. Once finished, it transitions to drive to the first pickup location.</li>
+     *     <li><b>DRIVE_PICKUP1 & DRIVE_PICKUP1_END:</b> Navigates the robot to the first set of balls on the field.</li>
+     *     <li><b>SCORE1:</b> Scores the balls collected from the first pickup. Transitions to drive to the second pickup location.</li>
+     *     <li><b>DRIVE_PICKUP2 & DRIVE_PICKUP2_END:</b> Navigates the robot to the second set of balls.</li>
+     *     <li><b>SCORE2:</b> Scores the balls collected from the second pickup. Transitions to the final path.</li>
+     *     <li><b>END:</b> Drives to a final parking position and concludes the autonomous routine.</li>
+     * </ul>
+     * Each state transition is typically triggered by the completion of a path (checked with {@code follower.isBusy()})
+     * or the completion of an action like dumping balls.
+     */
     public void autonomousPathUpdate() {
         switch(pathState) {
             case SCORE_PRELOAD:
-                //TODO: run standard scoring state machine here
-                if (!isDumping) {
-                    startDumping();
-                }
+                dumpItemsSM();
 
-                // The dumpItems() method is now called from the main loop()
-                // so we just wait until it's finished.
-                if (!isDumping && !follower.isBusy()){
-                    // just scored preload, drive to pickup point 1
-                    follower.followPath(pickup1);
-                    setPathState(PathState.DRIVE_PICKUP1);
-                }
-
-                if (pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()){
-                    // just scored preload, drive to pickup point 1
-                    follower.followPath(pickup1);
-                    setPathState(PathState.DRIVE_PICKUP1);
+                if (dumpState == DumpState.FINISHED) {
+                    startDump();
+                    if (pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()) {
+                        // just scored preload, drive to pickup point 1
+                        follower.followPath(pickup1);
+                        setPathState(PathState.DRIVE_PICKUP1);
+                    }
                 }
                 break;
             case SCORE1:
-                //TODO: run standard scoring state machine here
-                if(pathTimer.getElapsedTimeSeconds() > 5 && !follower.isBusy()){
-                    // scored pickup 1, drive to pickup 2
-                    follower.followPath(pickup2);
-                    follower.setMaxPower(1);
-                    setPathState(PathState.DRIVE_PICKUP2);
+                dumpItemsSM();
+
+                if (dumpState == DumpState.FINISHED) {
+                    startDump();
+                    if(pathTimer.getElapsedTimeSeconds() > 5 && !follower.isBusy()) {
+                        // scored pickup 1, drive to pickup 2
+                        follower.followPath(pickup2);
+                        follower.setMaxPower(1);
+                        setPathState(PathState.DRIVE_PICKUP2);
+                    }
                 }
                 break;
             case SCORE2:
-                //TODO: run standard scoring state machine here
-                if(pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
-                    // end state machine
-                    follower.followPath(endPoint);
-                    follower.setMaxPower(1);
-                    setPathState(PathState.END);
+                dumpItemsSM();
+
+                if (dumpState == DumpState.FINISHED) {
+                    shooter.stop();         //Turn off the shooter when we finish auto
+                    if(pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
+                        // end state machine
+                        follower.followPath(endPoint);
+                        follower.setMaxPower(1);
+                        setPathState(PathState.END);
+                    }
                 }
                 break;
             case DRIVE_START_SCORE:
+                startDump();
+
                 // drive from start to scoring position
                 follower.followPath(scorePreload, true);
                 follower.setMaxPower(1);
                 setPathState(PathState.SCORE_PRELOAD);
+
                 break;
             case DRIVE_PICKUP1_END:
                 if(!follower.isBusy()) {
@@ -194,6 +244,13 @@ public class BluePedroAutoGoal extends OpMode {
         }
     }
 
+    /**
+     * Sets the current state of the autonomous pathing state machine and resets the path timer.
+     * This method should be called whenever transitioning from one path segment or action to another
+     * to ensure the timer for the new state starts at zero.
+     *
+     * @param newState The {@link PathState} to transition to.
+     */
     public void setPathState(PathState newState){
         pathState = newState;
         pathTimer.resetTimer();
@@ -203,9 +260,10 @@ public class BluePedroAutoGoal extends OpMode {
     public void init() {
         // set initial state
         pathState = PathState.DRIVE_START_SCORE;
+        dumpState = DumpState.IDLE;
+
         pathTimer = new Timer();
         opModeTimer = new Timer();
-        opModeTimer.resetTimer();
 
         follower = Constants.createFollower(hardwareMap);
 
@@ -239,10 +297,6 @@ public class BluePedroAutoGoal extends OpMode {
         follower.update();
         autonomousPathUpdate();
 
-        // Call the updated dump logic from the main loop
-        if (isDumping) {
-            dumpItems();
-        }
         // give data back to drivers
         telemetry.addData("path state", pathState.toString());
         telemetry.addData("x", follower.getPose().getX());
@@ -251,45 +305,65 @@ public class BluePedroAutoGoal extends OpMode {
         telemetry.addData("Path time", pathTimer.getElapsedTimeSeconds());
     }
 
-    // Call this method to START the dumping process
-    void startDumping() {
-        shooter.run(); // Start the shooter motor
-        dumpTimer.reset();
-        isDumping = true;
+    /**
+     * Initiates the automated process of dumping all 3 balls into the goal.
+     * This method sets the dump state to {@code SPIN_UP}, resets the dump counter and timer,
+     * and starts the shooter motor to bring it up to speed. The actual dumping logic is
+     * handled by the {@code dumpItemsSM()} state machine, which is called subsequently
+     * in the main loop.
+     */
+    public void startDump() {
+        dumpState = DumpState.SPIN_UP;
         dumpCount = 0;
+        dumpTimer.reset();
+        shooter.run();
     }
-    void dumpItems() {
-        // Step 1: Wait for the shooter to spin up
-        if (dumpTimer.milliseconds() < LAUNCH_DELAY_MILLISECONDS) {
-            // Still waiting for the shooter to get to speed, do nothing else
-            return;
-        }
 
-        // Step 2: Sequentially launch items
-        if (dumpCount < 3) {
-            door.forceOpenLock(); // Keep the door open
+    /**
+     * Manages the state machine for dumping balls into the goal.
+     * This method should be called repeatedly in the main loop to progress through the states.
+     * <p>
+     * The process follows these states:
+     * <ul>
+     *     <li><b>IDLE:</b> The default state, does nothing.</li>
+     *     <li><b>SPIN_UP:</b> Waits for the shooter motor to reach the required speed.</li>
+     *     <li><b>DUMPING:</b> Opens the door and cycles through the spindexer compartments to launch items one by one. It continues until the target number of items (TOTAL_DUMPS) has been launched.</li>
+     *     <li><b>FINISHED:</b> The dumping sequence is complete. It closes the door, unlocks it, and stops the shooter motor.</li>
+     * </ul>
+     */
+    public void dumpItemsSM() {
 
-            // If the spindexer is at the correct position (limit switch pressed)
-            if (spindexerLogic.spindexerLimitSwitchCheck()) {
-                // and enough time has passed to let the item settle and shoot...
-                if (dumpTimer.milliseconds() > 500) { // 500ms delay to shoot and settle
+        switch (dumpState) {
+            case IDLE:
+                break;
+            case SPIN_UP:
+                if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
+                    launchTimer.reset();
+                    dumpState = DumpState.DUMPING;
+                }
+                break;
+            case DUMPING:
+                door.forceOpenLock();
+                if (launchTimer.milliseconds() > LAUNCH_DELAY_MS) {
+                    spindexerLogic.nextCompartment();
+                }
+                if (spindexerLogic.spindexerLimitSwitchCheck()) {
                     dumpCount++;
-                    telemetry.addLine("dumpCount: " + dumpCount);
-                    if (dumpCount < 3) {
-                        // Move to the next compartment if we are not done
-                        spindexerLogic.nextCompartment();
-                        dumpTimer.reset(); // Reset timer for the next item
+                    launchTimer.reset();
+
+                    telemetry.addData("Dump Count", dumpCount);
+                    if (dumpCount >= TOTAL_DUMPS) {
+                        dumpState = DumpState.FINISHED;
                     }
                 }
-            }
-        } else {
-            // Step 3: We are done dumping
-            isDumping = false;
-            shooter.stopFast(); // Stop the shooter
-            door.closeDoor();   // Close the door
-            // Now you can proceed to the next state in your autonomous path
+                break;
+            case FINISHED:
+                door.unlock();
+                door.forceClose();
+                break;
         }
     }
+
 
 }
 
