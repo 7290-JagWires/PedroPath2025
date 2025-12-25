@@ -50,10 +50,10 @@ public class BluePedroAutoGoal extends OpMode {
      */
     private final Pose startPose = new Pose(17, 115, Math.toRadians(25));
     private final Pose shootPoint = new Pose(59, 85, Math.toRadians(155));
-    private final Pose pickup1Pose = new Pose(42, 83, Math.toRadians(180));
-    private final Pose endPickup1Pose = new Pose(23, 83, Math.toRadians(180));
-    private final Pose pickup2Pose = new Pose(42, 60, Math.toRadians(180));
-    private final Pose endPickup2Pose = new Pose(23, 60, Math.toRadians(180));
+    private final Pose pickup1Pose = new Pose(37, 83, Math.toRadians(180));
+    private final Pose endPickup1Pose = new Pose(21, 83, Math.toRadians(180));
+    private final Pose pickup2Pose = new Pose(37, 60, Math.toRadians(180));
+    private final Pose endPickup2Pose = new Pose(21, 60, Math.toRadians(180));
 
 
     // ---------- Paths--------
@@ -102,8 +102,8 @@ public class BluePedroAutoGoal extends OpMode {
      */
     public void buildPaths() {
         endPoint = follower.pathBuilder() // returns the robot pickup1Pose to end off shooting line
-                .addPath(new BezierLine(shootPoint, pickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
+                .addPath(new BezierLine(shootPoint, endPickup1Pose))
+                .setLinearHeadingInterpolation(shootPoint.getHeading(), endPickup1Pose.getHeading())
                 .build();
         scorePreload = follower.pathBuilder() // moves from from start > scoring position
                 .addPath(new BezierLine(startPose, shootPoint))

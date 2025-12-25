@@ -16,9 +16,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(9.3)
-            .forwardZeroPowerAcceleration(-42.94987152126812)
-            .lateralZeroPowerAcceleration(-56.47629716163773)
+            .mass(16.6)
+            .forwardZeroPowerAcceleration(-33.45700351816213)
+            .lateralZeroPowerAcceleration(-52.863310139318635)
             .translationalPIDFCoefficients(new PIDFCoefficients(0.1, 0, 0.001, 0.04))
             .headingPIDFCoefficients(new PIDFCoefficients(0.8, 0, 0.01, 0.03))
             .drivePIDFCoefficients(new FilteredPIDFCoefficients(.02,0,0.00001,0.6,0.01))
@@ -34,11 +34,11 @@ public class Constants {
             .leftRearMotorDirection(DcMotorSimple.Direction.REVERSE)
             .rightFrontMotorDirection(DcMotorSimple.Direction.FORWARD)
             .rightRearMotorDirection(DcMotorSimple.Direction.FORWARD)
-            .xVelocity(64.84177044245202)
-            .yVelocity(53.49756436085138);
+            .xVelocity( 61.53136486143578)
+            .yVelocity(47.05928484098179);
     public static PinpointConstants localizerConstants = new PinpointConstants()
-            .forwardPodY(0)
-            .strafePodX(4.25)
+            .forwardPodY(-1.5)
+            .strafePodX(-1.875)
             .distanceUnit(DistanceUnit.INCH)
             .hardwareMapName("odo")
             .encoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD)
