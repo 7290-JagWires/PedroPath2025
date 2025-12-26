@@ -223,6 +223,7 @@ public class BluePedroAutoGoal extends OpMode {
                 }
                 break;
            case DRIVE_PICKUP1:
+               startPickup();
                 if(!follower.isBusy()) {
                     follower.followPath(endPickup1);
                     follower.setMaxPower(.25);
@@ -239,6 +240,7 @@ public class BluePedroAutoGoal extends OpMode {
                 }
                 break;
             case DRIVE_PICKUP2:
+                startPickup();
                 if(!follower.isBusy()) {
                     follower.followPath(endPickup2);
                     follower.setMaxPower(.25);
@@ -383,7 +385,7 @@ public class BluePedroAutoGoal extends OpMode {
         }
     }
     public void startPickup() {
-            pickupState = PickupState.SPIN_UP;
+            pickupState = PickupState.IDLE;
             pickupCount = 0;
             pickupTimer.reset();
             shooter.stop();
