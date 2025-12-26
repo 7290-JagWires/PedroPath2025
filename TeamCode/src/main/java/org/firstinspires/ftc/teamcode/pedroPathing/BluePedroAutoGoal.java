@@ -24,9 +24,10 @@ public class BluePedroAutoGoal extends OpMode {
     private Timer pathTimer, opModeTimer;
     ElapsedTime launchTimer = new ElapsedTime();
     ElapsedTime dumpTimer = new ElapsedTime();
-    boolean isDumping = false;
     int dumpCount = 0;
-    static final int TOTAL_DUMPS = 3;
+    ElapsedTime pickupTimer = new ElapsedTime();
+    int pickupCount = 0;
+    static final int TOTAL_BALLS = 3;
     static final double DOOR_TIMER_DELAY = 2.5;  //Just a delay to make sure robot is set before opening door
     static final int SHOOTER_SPINUP_MS = 1500;
     static final int LAUNCH_DELAY_MS = 500;
@@ -81,6 +82,15 @@ public class BluePedroAutoGoal extends OpMode {
         FINISHED
     }
     DumpState dumpState;
+
+    public enum PickupState {
+        IDLE,
+        SPIN_UP,
+        PICKUP,
+        FINISHED
+    }
+    PickupState pickupState;
+
 
     /**
      * Constructs the various autonomous paths the robot will follow.
@@ -160,6 +170,15 @@ public class BluePedroAutoGoal extends OpMode {
      */
     public void autonomousPathUpdate() {
         switch(pathState) {
+            case DRIVE_START_SCORE:
+                startDump();
+
+                // drive from start to scoring position
+                follower.followPath(scorePreload, true);
+                follower.setMaxPower(1);
+                setPathState(PathState.SCORE_PRELOAD);
+                break;
+
             case SCORE_PRELOAD:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     dumpItemsSM();
@@ -203,19 +222,7 @@ public class BluePedroAutoGoal extends OpMode {
                     }
                 }
                 break;
-            case DRIVE_START_SCORE:
-                startDump();
-
-                // drive from start to scoring position
-                follower.followPath(scorePreload, true);
-                follower.setMaxPower(1);
-                setPathState(PathState.SCORE_PRELOAD);
-                break;
-
-            case DRIVE_PICKUP1:
-                // scored. drive to pickup point 1
-                door.forceClose();
-
+           case DRIVE_PICKUP1:
                 if(!follower.isBusy()) {
                     follower.followPath(endPickup1);
                     follower.setMaxPower(.25);
@@ -223,6 +230,7 @@ public class BluePedroAutoGoal extends OpMode {
                 }
                 break;
             case DRIVE_PICKUP1_END:
+                pickupItemsSM();
                 if(!follower.isBusy()) {
                     // picked up at spike 1. drive from pickup1 to score
                     follower.followPath(score1, true);
@@ -231,9 +239,6 @@ public class BluePedroAutoGoal extends OpMode {
                 }
                 break;
             case DRIVE_PICKUP2:
-                // scored, drive to pickup point 2
-                door.forceClose();
-
                 if(!follower.isBusy()) {
                     follower.followPath(endPickup2);
                     follower.setMaxPower(.25);
@@ -241,6 +246,7 @@ public class BluePedroAutoGoal extends OpMode {
                 }
                 break;
             case DRIVE_PICKUP2_END:
+                pickupItemsSM();
                 if(!follower.isBusy()) {
                     // picked up at spike 2. drive from pickup 2 to score
                     follower.followPath(score2, true);
@@ -270,6 +276,7 @@ public class BluePedroAutoGoal extends OpMode {
         // set initial state
         pathState = PathState.DRIVE_START_SCORE;
         dumpState = DumpState.IDLE;
+        pickupState = PickupState.IDLE;
 
         pathTimer = new Timer();
         opModeTimer = new Timer();
@@ -363,7 +370,7 @@ public class BluePedroAutoGoal extends OpMode {
                     launchTimer.reset();
 
                     telemetry.addData("Dump Count", dumpCount);
-                    if (dumpCount >= TOTAL_DUMPS) {
+                    if (dumpCount >= TOTAL_BALLS) {
                         dumpState = DumpState.FINISHED;
                     }
                 }
@@ -371,10 +378,49 @@ public class BluePedroAutoGoal extends OpMode {
             case FINISHED:
                 door.unlock();
                 door.forceClose();
+                dumpState = DumpState.IDLE;
                 break;
         }
     }
+    public void startPickup() {
+            pickupState = PickupState.SPIN_UP;
+            pickupCount = 0;
+            pickupTimer.reset();
+            shooter.stop();
+    }
+    public void pickupItemsSM() {
+        switch (pickupState) {
+             case IDLE:
+                 intakeActive.intakeOn();
+                 door.unlock();
+                 door.forceClose();
+                 pickupState = PickupState.SPIN_UP;
+                 break;
+             case SPIN_UP:
+                 if (pickupTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
+                     launchTimer.reset();
+                     pickupState = PickupState.PICKUP;
+                 }
+                 break;
+             case PICKUP:
+                 if (launchTimer.milliseconds() > LAUNCH_DELAY_MS) {
+                     spindexerLogic.nextCompartment();
+                 }
+                 if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                     pickupCount++;
+                     launchTimer.reset();
 
-
+                     telemetry.addData("Pickup Count", pickupCount);
+                     if (pickupCount >= TOTAL_BALLS) {
+                         pickupState = PickupState.FINISHED;
+                     }
+                 }
+                 break;
+             case FINISHED:
+                 intakeActive.intakeOff();
+                 pickupState = PickupState.IDLE;
+                 break;
+        }
+    }
 }
 

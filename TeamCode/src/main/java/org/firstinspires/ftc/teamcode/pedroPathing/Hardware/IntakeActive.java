@@ -25,6 +25,14 @@ public class IntakeActive {
         intake.setPower(INTAKE_OFF); // ensure off at init
     }
 
+    public void intakeOn() {
+        intake.setPower(INTAKE_ON); // ensure off at init
+    }
+
+    public void intakeOff() {
+        intake.setPower(INTAKE_ON); // ensure off at init
+    }
+
     /** Runs intake based on gamepad2 left bumper input. */
     public void run() {
         if (myOpMode.gamepad2.left_bumper) {
