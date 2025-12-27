@@ -12,20 +12,9 @@ public class SpindexerIndexerLogic {
     private final OpMode opMode;
     private final SpindexerMotor motor;
     private final MagneticLimitSwitch limit;
-
-    private static final double INDEX_POWER = 1 ;
-
+    private static final double INDEX_POWER = .75;
     private final int ticksPerCompartment;
-/*
-* KEVIN NEW CODE TO USE TICKS FOR SPINDEXER
- */
-    public static final int STATIONS = 3;
-    public static final double TICKS_PER_REV = 4063.0;
-    public static final int TICKS_PER_STATION =
-            (int)(TICKS_PER_REV / STATIONS); // ≈ 1354
-    /*
-     * KEVIN NEW CODE TO USE TICKS FOR SPINDEXER
-     */
+
     // 0 = Comp1, 1 = Comp2, 2 = Comp3
     private int compartmentIndex = 0;
 
