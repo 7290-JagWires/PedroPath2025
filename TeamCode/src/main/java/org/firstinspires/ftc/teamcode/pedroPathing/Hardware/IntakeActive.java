@@ -24,13 +24,11 @@ public class IntakeActive {
         intake = opMode.hardwareMap.get(DcMotorEx.class, "intake");
         intake.setPower(INTAKE_OFF); // ensure off at init
     }
-
     public void intakeOn() {
         intake.setPower(INTAKE_ON); // ensure off at init
     }
-
     public void intakeOff() {
-        intake.setPower(INTAKE_ON); // ensure off at init
+        intake.setPower(INTAKE_OFF); // ensure off at init
     }
 
     /** Runs intake based on gamepad2 left bumper input. */
