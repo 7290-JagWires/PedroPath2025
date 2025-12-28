@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
-import static java.lang.Thread.sleep;
-
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
@@ -9,7 +7,6 @@ import com.pedropathing.paths.PathChain;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
@@ -19,25 +16,14 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.PickupManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 
 @Autonomous(name = "Blue Auto Goal", group = "Pedro")
 public class BluePedroAutoGoal extends OpMode {
     private Follower follower;
     private Timer pathTimer, opModeTimer;
-    ElapsedTime launchTimer = new ElapsedTime();
-    ElapsedTime dumpTimer = new ElapsedTime();
-    ElapsedTime pickupTimer = new ElapsedTime();
-    private ColorSensor colorSensor;
-    private IndicatorLight indicator;
-    int dumpCount = 0;
-    int pickupCount = 0;
-    int totalBallCount = 0;
-
-    static final int TOTAL_BALLS = 3;
     static final double DOOR_TIMER_DELAY = 2.5;  //Just a delay to make sure robot is set before opening door
-    static final int SHOOTER_SPINUP_MS = 1500;
-    static final int LAUNCH_DELAY_MS = 500;
-    private static final int LAUNCH_DELAY_MILLISECONDS = 1500;
     private static final int TICKS_PER_COMPARTMENT = 1354;   // <— update with real measured value
     public IntakeActive intakeActive;
     public Shooter shooter;
@@ -45,6 +31,8 @@ public class BluePedroAutoGoal extends OpMode {
     public SpindexerMotor spindexerMotor;
     public MagneticLimitSwitch spindexerMag;
     public SpindexerIndexerLogic spindexerLogic;
+    private PickupManager pickupManager;
+    private DumpManager dumpManager;
 
     /* ------ init Poses --------
     Pedro is based on a 0-144 grid, the same size as the FTC field in inches.
@@ -87,25 +75,8 @@ public class BluePedroAutoGoal extends OpMode {
         DRIVE_PICKUP2BALL3_END,
         DRIVE_PICKUP2_END,
         END
-    };
+    }
     PathState pathState;
-    public enum DumpState {
-        IDLE,
-        SPIN_UP,
-        DUMPING,
-        FINISHED
-    }
-    DumpState dumpState;
-
-    public enum PickupState {
-        IDLE,
-        SPIN_UP,
-        PICKUP,
-        WAITING_FOR_SPIN,
-        FINISHED
-    }
-    PickupState pickupState;
-
 
     /**
      * Constructs the various autonomous paths the robot will follow.
@@ -202,7 +173,7 @@ public class BluePedroAutoGoal extends OpMode {
     public void autonomousPathUpdate() {
         switch(pathState) {
             case DRIVE_START_SCORE:
-                startDump();
+                dumpManager.start();
 
                 // drive from start to scoring position
                 follower.followPath(scorePreload, true);
@@ -212,12 +183,11 @@ public class BluePedroAutoGoal extends OpMode {
 
             case SCORE_PRELOAD:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
-                    dumpItemsSM();
-                    if (dumpState == DumpState.FINISHED) {
+                    if (dumpManager.isFinished()) {
                         if (pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()) {
                             // just scored preload, drive to pickup point 1
-                            startPickup();
-                            totalBallCount = 0;
+                            pickupManager.start();
+                            pickupManager.setTotalBallCount(0);
                             follower.followPath(pickup1);
                             setPathState(PathState.DRIVE_PICKUP1);
                         }
@@ -226,13 +196,11 @@ public class BluePedroAutoGoal extends OpMode {
                 break;
             case SCORE1:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
-                    dumpItemsSM();
-
-                    if (dumpState == DumpState.FINISHED) {
+                    if (dumpManager.isFinished()) {
                         if (pathTimer.getElapsedTimeSeconds() > 5 && !follower.isBusy()) {
                             // scored pickup 1, drive to pickup 2
-                            startPickup();
-                            totalBallCount = 0;
+                            pickupManager.start();
+                            pickupManager.setTotalBallCount(0);
                             follower.followPath(pickup2);
                             follower.setMaxPower(1);
                             setPathState(PathState.DRIVE_PICKUP2);
@@ -242,9 +210,7 @@ public class BluePedroAutoGoal extends OpMode {
                 break;
             case SCORE2:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
-                    dumpItemsSM();
-
-                    if (dumpState == DumpState.FINISHED) {
+                    if (dumpManager.isFinished()) {
                         shooter.stop();         //Turn off the shooter when we finish auto
                         if (pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
                             // end state machine
@@ -264,39 +230,39 @@ public class BluePedroAutoGoal extends OpMode {
                 }
                break;
             case DRIVE_PICKUP1BALL2_END:
-                pickupItemsSM();
-                if (pickupState == PickupState.FINISHED) {
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(pickup1Ball3, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP1BALL3_END;
-                        startPickup();
+                        pickupManager.start(); // Restart for the next pickup
                     }
                 }
                 break;
             case DRIVE_PICKUP1BALL3_END:
-                pickupItemsSM();
-                if (pickupState == PickupState.FINISHED) {
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(endPickup1, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP1_END;
-                        startPickup();
+                        pickupManager.start(); // Restart for the next pickup
                     }
                 }
                 break;
             case DRIVE_PICKUP1_END:
-                pickupItemsSM();
-                if (pickupState == PickupState.FINISHED) {
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(score1, true);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE1;
                         intakeActive.intakeOff();
-                        startDump();
+                        dumpManager.start();
                     }
                 }
                 break;
@@ -308,39 +274,39 @@ public class BluePedroAutoGoal extends OpMode {
                 }
                 break;
             case DRIVE_PICKUP2BALL2_END:
-                pickupItemsSM();
-                if (pickupState == PickupState.FINISHED) {
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(pickup2Ball3, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2BALL3_END;
-                        startPickup();
+                        pickupManager.start(); // Restart for the next pickup
                     }
                 }
                 break;
             case DRIVE_PICKUP2BALL3_END:
-                pickupItemsSM();
-                if (pickupState == PickupState.FINISHED) {
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(endPickup2, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2_END;
-                        startPickup();
+                        pickupManager.start(); // Restart for the next pickup
                     }
                 }
                 break;
             case DRIVE_PICKUP2_END:
-                pickupItemsSM();
-                if (pickupState == PickupState.FINISHED) {
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(score2, true);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE2;
                         intakeActive.intakeOff();
-                        startDump();
+                        dumpManager.start();
                     }
                 }
                 break;
@@ -365,8 +331,6 @@ public class BluePedroAutoGoal extends OpMode {
     public void init() {
         // set initial state
         pathState = PathState.DRIVE_START_SCORE;
-        dumpState = DumpState.IDLE;
-        pickupState = PickupState.IDLE;
 
         pathTimer = new Timer();
         opModeTimer = new Timer();
@@ -377,8 +341,8 @@ public class BluePedroAutoGoal extends OpMode {
         intakeActive = new IntakeActive(this);
         shooter      = new Shooter(this);
         door         = new Door(this);
-        colorSensor = new ColorSensor(hardwareMap, "color_sensor");
-        indicator = new IndicatorLight(hardwareMap, "rgbServo");
+        ColorSensor colorSensor = new ColorSensor(hardwareMap, "color_sensor");
+        IndicatorLight indicator = new IndicatorLight(hardwareMap, "rgbServo");
 
 
         // Spindexer + magnetic sensor
@@ -389,6 +353,17 @@ public class BluePedroAutoGoal extends OpMode {
                 spindexerMotor,
                 spindexerMag,
                 TICKS_PER_COMPARTMENT
+        );
+
+        dumpManager = new DumpManager(shooter, door, spindexerLogic);
+
+        pickupManager = new PickupManager(
+                door,
+                shooter,
+                intakeActive,
+                spindexerLogic,
+                colorSensor,
+                indicator
         );
 
         buildPaths();
@@ -404,149 +379,20 @@ public class BluePedroAutoGoal extends OpMode {
     public void loop() {
         // update state machine + odometry
         follower.update();
+        dumpManager.update();
+        pickupManager.update();
         autonomousPathUpdate();
 
         // give data back to drivers
         telemetry.addData("path state", pathState.toString());
-        telemetry.addData("Dump Count", dumpCount);
-        telemetry.addData("dump state", dumpState.toString());
-        telemetry.addData("Total Ball Count", totalBallCount);
-        telemetry.addData("pickup state", pickupState.toString());
+        telemetry.addData("dump state", dumpManager.getState());
+        telemetry.addData("Dump Count", dumpManager.getDumpCount());
+        telemetry.addData("Total Ball Count", pickupManager.getTotalBallCount());
+        telemetry.addData("pickup state", pickupManager.getState()); // Update telemetry
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
         telemetry.addData("Path time", pathTimer.getElapsedTimeSeconds());
-    }
-
-    /**
-     * Initiates the automated process of dumping all 3 balls into the goal.
-     * This method sets the dump state to {@code SPIN_UP}, resets the dump counter and timer,
-     * and starts the shooter motor to bring it up to speed. The actual dumping logic is
-     * handled by the {@code dumpItemsSM()} state machine, which is called subsequently
-     * in the main loop.
-     */
-    public void startDump() {
-        dumpState = DumpState.SPIN_UP;
-        dumpCount = 0;
-        dumpTimer.reset();
-        shooter.run();
-    }
-
-    /**
-     * Manages the state machine for dumping balls into the goal.
-     * This method should be called repeatedly in the main loop to progress through the states.
-     * <p>
-     * The process follows these states:
-     * <ul>
-     *     <li><b>IDLE:</b> The default state, does nothing.</li>
-     *     <li><b>SPIN_UP:</b> Waits for the shooter motor to reach the required speed.</li>
-     *     <li><b>DUMPING:</b> Opens the door and cycles through the spindexer compartments to launch items one by one. It continues until the target number of items (TOTAL_DUMPS) has been launched.</li>
-     *     <li><b>FINISHED:</b> The dumping sequence is complete. It closes the door, unlocks it, and stops the shooter motor.</li>
-     * </ul>
-     */
-    public void dumpItemsSM() {
-
-        switch (dumpState) {
-            case IDLE:
-
-                break;
-            case SPIN_UP:
-                if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
-                    launchTimer.reset();
-                    dumpState = DumpState.DUMPING;
-                }
-                break;
-            case DUMPING:
-                door.forceOpenLock();
-                if (launchTimer.milliseconds() > LAUNCH_DELAY_MS) {
-                    spindexerLogic.nextCompartmentAuto();
-                }
-                if (spindexerLogic.spindexerLimitSwitchCheck()) {
-                    dumpCount++;
-                    launchTimer.reset();
-
-                    if (dumpCount >= TOTAL_BALLS) {
-                        dumpState = DumpState.FINISHED;
-                    }
-                }
-                break;
-            case FINISHED:
-                door.unlock();
-                door.forceClose();
-                break;
-        }
-    }
-    public void startPickup() {
-        pickupState = PickupState.SPIN_UP;
-        door.unlock();
-        door.forceClose();
-        pickupCount = 0;
-        shooter.stop();
-    }
-    public void pickupItemsSM() {
-        switch (pickupState) {
-            case IDLE:
-
-                break;
-            case SPIN_UP:
-                intakeActive.intakeOn();
-                pickupTimer.reset();
-                pickupState = PickupState.PICKUP;
-                break;
-            case PICKUP:
-                // Start the spindexer moving to the next slot
-                if (pickupTimer.milliseconds() > LAUNCH_DELAY_MS) {
-                    if (isBall() == true) {
-                        pickupCount++;
-                        totalBallCount++;  //keeping track off all balls
-                        if (totalBallCount < 3) {
-                            spindexerLogic.nextCompartmentAuto();
-                            pickupState = PickupState.WAITING_FOR_SPIN;
-                        } else {
-                            totalBallCount = 0;
-                            pickupState = PickupState.FINISHED;
-                        }
-                    }
-                }
-                break;
-
-            case WAITING_FOR_SPIN:
-                if (spindexerLogic.spindexerLimitSwitchCheckPickup() ) {
-
-                    pickupTimer.reset();
-                    if (pickupCount >= 1) {
-                        // We've collected all the balls, we're done with this process
-                        pickupState = PickupState.FINISHED;
-                    } else {
-                        // We need to pick up another ball, go back to the PICKUP state
-                        // to initiate the next spin.
-                        pickupState = PickupState.PICKUP;
-                    }
-                }
-                break;
-
-            case FINISHED:
-                // You might want to turn the intake off here
-                // intakeActive.intakeOff();
-                break;
-        }
-    }
-    public boolean isBall() {
-        colorSensor.update();
-        ColorSensor.BallColor color = colorSensor.getBallColor();
-
-        if (color == ColorSensor.BallColor.PURPLE) {
-            indicator.setPurple();
-            return true;
-        }
-        else if (color == ColorSensor.BallColor.GREEN) {
-            indicator.setGreen();
-            return true;
-        }
-        else  {
-            indicator.off();
-            return false;
-        }
     }
 
 }
