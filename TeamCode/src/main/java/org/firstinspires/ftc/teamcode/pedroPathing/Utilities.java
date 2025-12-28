@@ -85,6 +85,8 @@ public class Utilities {
                 case IDLE:
                     break;
                 case SPIN_UP:
+                    door.unlock();
+                    door.forceClose();
                     intakeActive.intakeOn();
                     pickupTimer.reset();
                     pickupState = PickupState.PICKUP;
@@ -156,7 +158,7 @@ public class Utilities {
         private final SpindexerIndexerLogic spindexerLogic;
 
         // Constants
-        private static final int SHOOTER_SPINUP_MS = 1500;
+        private static final int SHOOTER_SPINUP_MS = 2000;
         private static final int LAUNCH_DELAY_MS = 500;
         private static final int TOTAL_BALLS_TO_DUMP = 3;
 
@@ -195,7 +197,7 @@ public class Utilities {
                 case DUMPING:
                     door.forceOpenLock();
                     if (launchTimer.milliseconds() > LAUNCH_DELAY_MS) {
-                        spindexerLogic.nextCompartmentAuto();
+                        spindexerLogic.nextCompartment();
                     }
                     if (spindexerLogic.spindexerLimitSwitchCheck()) {
                         dumpCount++;
@@ -207,9 +209,6 @@ public class Utilities {
                     break;
                 case FINISHED:
                     // Actions to take once all balls are dumped
-                    shooter.stop();
-                    door.unlock();
-                    door.forceClose();
                     break;
             }
         }

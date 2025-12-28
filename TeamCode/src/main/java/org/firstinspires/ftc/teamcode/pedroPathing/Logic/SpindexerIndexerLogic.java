@@ -96,7 +96,7 @@ public class SpindexerIndexerLogic {
         // so setting the power didn't make it move. I added setModeRunUsingEncoder()
         moveDirection = 1; // Record we are moving forward
         motor.setModeRunUsingEncoder();
-        motor.setPower(INDEX_POWER);
+        motor.setPower(.9);
     }
 
     public void nextCompartmentAuto() {

@@ -1,9 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.PathChain;
+
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -23,7 +21,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 public class BluePedroAutoGoal extends OpMode {
     private Follower follower;
     private Timer pathTimer, opModeTimer;
-    static final double DOOR_TIMER_DELAY = 2.5;  //Just a delay to make sure robot is set before opening door
+    static final double DOOR_TIMER_DELAY = 2.75;  //Just a delay to make sure robot is set before opening door
     private static final int TICKS_PER_COMPARTMENT = 1354;   // <— update with real measured value
     public IntakeActive intakeActive;
     public Shooter shooter;
@@ -33,32 +31,7 @@ public class BluePedroAutoGoal extends OpMode {
     public SpindexerIndexerLogic spindexerLogic;
     private PickupManager pickupManager;
     private DumpManager dumpManager;
-
-    /* ------ init Poses --------
-    Pedro is based on a 0-144 grid, the same size as the FTC field in inches.
-    0,0 is bottom left corner. each coordinate is 1 inch over.
-    remember, pedro assumes you start at 0,0 CENTRE of your ROBOT
-    initial heading (0) is facing towards goals
-    */
-    /*
-    Think of Poses like a set position on the field. we have several "important" positions to keep track of here
-    so we write them down here.
-     */
-    private final Pose startPose = new Pose(17, 115, Math.toRadians(25));
-    private final Pose shootPoint = new Pose(59, 85, Math.toRadians(155));
-    private final Pose pickup1Pose = new Pose(37, 83, Math.toRadians(180));
-    private final Pose pickup1Pose2 = new Pose(32, 83, Math.toRadians(180));
-    private final Pose pickup1Pose3 = new Pose(27, 83, Math.toRadians(180));
-    private final Pose endPickup1Pose = new Pose(21, 83, Math.toRadians(180));
-    private final Pose pickup2Pose = new Pose(37, 60, Math.toRadians(180));
-    private final Pose pickup2Pose2 = new Pose(32, 60, Math.toRadians(180));
-    private final Pose pickup2Pose3 = new Pose(27, 60, Math.toRadians(180));
-    private final Pose endPickup2Pose = new Pose(21, 60, Math.toRadians(180));
-
-
-    // ---------- Paths--------
-    // these are individual names for each of our paths that we will eventually follow/create
-    private PathChain scorePreload, pickup1, pickup1Ball2, pickup1Ball3, endPickup1, score1, pickup2, pickup2Ball2, pickup2Ball3, endPickup2, score2, endPoint;
+    private BluePaths paths;
 
     public enum PathState {
         // These are the various states inside of our auto machine.
@@ -77,78 +50,6 @@ public class BluePedroAutoGoal extends OpMode {
         END
     }
     PathState pathState;
-
-    /**
-     * Constructs the various autonomous paths the robot will follow.
-     * This method initializes all the {@link PathChain} objects used in the autonomous routine.
-     * It uses a to define a sequence of movements
-     * between predefined {@link Pose} coordinates on the field.
-     * <p>
-     * Paths are built for the following actions:
-     * <ul>
-     *     <li>{@code scorePreload}: Move from the starting position to the shooting point.</li>
-     *     <li>{@code pickup1} & {@code endPickup1}: Move from the shooting point to the first pickup location.</li>
-     *     <li>{@code score1}: Return from the first pickup location to the shooting point.</li>
-     *     <li>{@code pickup2} & {@code endPickup2}: Move from the shooting point to the second pickup location.</li>
-     *     <li>{@code score2}: Return from the second pickup location to the shooting point.</li>
-     *     <li>{@code endPoint}: A final parking path.</li>
-     * </ul>
-     * Each path segment uses {@link BezierLine} for movement and {@code setLinearHeadingInterpolation}
-     * to control the robot's orientation during the path. This method should be called during initialization
-     * after the {@code follower} has been created.
-     */
-    public void buildPaths() {
-        endPoint = follower.pathBuilder() // returns the robot pickup1Pose to end off shooting line
-                .addPath(new BezierLine(shootPoint, endPickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), endPickup1Pose.getHeading())
-                .build();
-        scorePreload = follower.pathBuilder() // moves from from start > scoring position
-                .addPath(new BezierLine(startPose, shootPoint))
-                .setLinearHeadingInterpolation(startPose.getHeading(), shootPoint.getHeading())
-                .build();
-        pickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(shootPoint, pickup1Pose))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose.getHeading())
-               .build();
-        pickup1Ball2 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(pickup1Pose, pickup1Pose2))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose2.getHeading())
-                .build();
-        pickup1Ball3 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(pickup1Pose2, pickup1Pose3))
-                .setLinearHeadingInterpolation(pickup1Pose2.getHeading(), pickup1Pose3.getHeading())
-                .build();
-        endPickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(pickup1Pose3, endPickup1Pose))
-                .setLinearHeadingInterpolation(pickup1Pose3.getHeading(), pickup1Pose.getHeading())
-                .build();
-        score1 = follower.pathBuilder() // moves from pickup 1 > scoring position
-                .addPath(new BezierLine(endPickup1Pose, shootPoint))
-                .setLinearHeadingInterpolation(endPickup1Pose.getHeading(), shootPoint.getHeading())
-                .build();
-        pickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
-                // use a curve to we can line up better for the balls
-                .addPath(new BezierLine(shootPoint, pickup2Pose))
-                .setLinearHeadingInterpolation( pickup2Pose.getHeading(), pickup2Pose.getHeading())
-                .build();
-        pickup2Ball2 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(pickup2Pose, pickup2Pose2))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), pickup2Pose2.getHeading())
-                .build();
-        pickup2Ball3 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(pickup2Pose2, pickup2Pose3))
-                .setLinearHeadingInterpolation(pickup2Pose2.getHeading(), pickup2Pose3.getHeading())
-                .build();
-        endPickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
-                // use a curve to we can line up better for the balls
-                .addPath(new BezierLine(pickup2Pose3, endPickup2Pose))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), endPickup2Pose.getHeading())
-                .build();
-        score2 = follower.pathBuilder() // moves from pickup 2 > scoring position
-                .addPath(new BezierLine(endPickup2Pose, shootPoint))
-                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPoint.getHeading())
-                .build();
-        }
 
     /**
      * Manages the robot's movement and actions during the autonomous period using a state machine.
@@ -176,7 +77,7 @@ public class BluePedroAutoGoal extends OpMode {
                 dumpManager.start();
 
                 // drive from start to scoring position
-                follower.followPath(scorePreload, true);
+                follower.followPath(paths.scorePreload, true);
                 follower.setMaxPower(1);
                 setPathState(PathState.SCORE_PRELOAD);
                 break;
@@ -184,11 +85,11 @@ public class BluePedroAutoGoal extends OpMode {
             case SCORE_PRELOAD:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     if (dumpManager.isFinished()) {
-                        if (pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()) {
+                        if (pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
                             // just scored preload, drive to pickup point 1
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
-                            follower.followPath(pickup1);
+                            follower.followPath(paths.pickup1);
                             setPathState(PathState.DRIVE_PICKUP1);
                         }
                     }
@@ -197,11 +98,11 @@ public class BluePedroAutoGoal extends OpMode {
             case SCORE1:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     if (dumpManager.isFinished()) {
-                        if (pathTimer.getElapsedTimeSeconds() > 5 && !follower.isBusy()) {
+                        if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // scored pickup 1, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
-                            follower.followPath(pickup2);
+                            follower.followPath(paths.pickup2);
                             follower.setMaxPower(1);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
@@ -212,9 +113,9 @@ public class BluePedroAutoGoal extends OpMode {
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     if (dumpManager.isFinished()) {
                         shooter.stop();         //Turn off the shooter when we finish auto
-                        if (pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
+                        if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // end state machine
-                            follower.followPath(endPoint);
+                            follower.followPath(paths.endPoint);
                             follower.setMaxPower(1);
                             intakeActive.intakeOff();
                             setPathState(PathState.END);
@@ -224,7 +125,7 @@ public class BluePedroAutoGoal extends OpMode {
                 break;
            case DRIVE_PICKUP1:
                 if(!follower.isBusy()) {
-                    follower.followPath(pickup1Ball2);
+                    follower.followPath(paths.pickup1Ball2);
                     follower.setMaxPower(1);
                     pathState = PathState.DRIVE_PICKUP1BALL2_END;
                 }
@@ -234,7 +135,7 @@ public class BluePedroAutoGoal extends OpMode {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(pickup1Ball3, true);
+                        follower.followPath(paths.pickup1Ball3, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP1BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -246,7 +147,7 @@ public class BluePedroAutoGoal extends OpMode {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(endPickup1, true);
+                        follower.followPath(paths.endPickup1, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP1_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -258,7 +159,7 @@ public class BluePedroAutoGoal extends OpMode {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(score1, true);
+                        follower.followPath(paths.score1, true);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE1;
                         intakeActive.intakeOff();
@@ -268,7 +169,7 @@ public class BluePedroAutoGoal extends OpMode {
                 break;
             case DRIVE_PICKUP2:
                 if(!follower.isBusy()) {
-                    follower.followPath(pickup2Ball2);
+                    follower.followPath(paths.pickup2Ball2);
                     follower.setMaxPower(1);
                     pathState = PathState.DRIVE_PICKUP2BALL2_END;
                 }
@@ -278,7 +179,7 @@ public class BluePedroAutoGoal extends OpMode {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(pickup2Ball3, true);
+                        follower.followPath(paths.pickup2Ball3, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -290,7 +191,7 @@ public class BluePedroAutoGoal extends OpMode {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(endPickup2, true);
+                        follower.followPath(paths.endPickup2, true);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -302,7 +203,7 @@ public class BluePedroAutoGoal extends OpMode {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if(!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(score2, true);
+                        follower.followPath(paths.score2, true);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE2;
                         intakeActive.intakeOff();
@@ -366,8 +267,12 @@ public class BluePedroAutoGoal extends OpMode {
                 indicator
         );
 
-        buildPaths();
-        follower.setStartingPose(startPose);
+        // Initialize the Paths class AFTER the follower is created
+        paths = new BluePaths(follower);
+        paths.buildPaths(); // Build all the paths
+
+        // Set the starting pose using the static Pose from the Paths class
+        follower.setPose(BluePaths.startPose);
     }
 
     public void start() {
