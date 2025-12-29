@@ -47,6 +47,7 @@ public class BluePaths {
                 .addPath(new BezierLine(shootPoint, endPickup1Pose))
                 .setLinearHeadingInterpolation(shootPoint.getHeading(), endPickup1Pose.getHeading())
                 .build();
+
         scorePreload = follower.pathBuilder()
                 .addPath(new BezierLine(startPose, shootPoint))
                 .setLinearHeadingInterpolation(startPose.getHeading(), shootPoint.getHeading())
