@@ -33,6 +33,7 @@ public class BluePedroAutoGoal extends OpMode {
     private DumpManager dumpManager;
     private BluePaths paths;
 
+
     public enum PathState {
         // These are the various states inside of our auto machine.
         DRIVE_START_SCORE,
