@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.examples;
 
+import com.bylazar.limelightproxy.TestLimelightServer;
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
@@ -10,15 +11,15 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import java.util.List;
 
 @TeleOp(name = "Test: Limelight AprilTags", group = "Test")
-@Disabled
+//@Disabled
 public class TestLimelightAprilTag extends LinearOpMode {
 
     private Limelight3A limelight;
-    public static final double OBELISK_HEIGHT = 19.5;
+    public static final double OBELISK_HEIGHT = 19.50;
     public static final double GOAL_TAG_HEIGHT = 32.75;
-    public static double limelightMountAngleDegrees = 17.25;       //Done - Adrienne ADD THIS VALUE  THIS IS THE ANGLE THE CAMERA IS MOUNTED AT.  i THINK YOU WERE ABOUT 15 DEGREES, BUT DOUBLE CHECK
-    public static double limelightLensHeightInches = 9.75;        //Done - Adrienne ADD THIS VALUE  DISTANCE FROM CENTER OF LIMELIGHT LENS TO THE FLOOR
-
+    public static double limelightMountAngleDegrees = 19.83;       //Done - Adrienne ADD THIS VALUE  THIS IS THE ANGLE THE CAMERA IS MOUNTED AT.  i THINK YOU WERE ABOUT 15 DEGREES, BUT DOUBLE CHECK
+    public static double limelightLensHeightInches = 9.50;        //Done - Adrienne ADD THIS VALUE  DISTANCE FROM CENTER OF LIMELIGHT LENS TO THE FLOOR
+    private static boolean limelightInverted = true;    //current camera mounted upside down
 
     @Override
     public void runOpMode() {
@@ -76,18 +77,27 @@ public class TestLimelightAprilTag extends LinearOpMode {
         limelight.stop();
     }
 
-//AH
-public double getDistanceToTarget(LLResult result, double goalHeightInches) {
+    public double getDistanceToTarget(LLResult result, double goalHeightInches) {
+
+            double cameraMountAngle = limelightMountAngleDegrees;
+
+            if (limelightInverted) {
+                cameraMountAngle = -cameraMountAngle;
+            }
 
             double targetOffsetAngle_Vertical = result.getTy();
 
-            double angleToGoalDegrees = limelightMountAngleDegrees + targetOffsetAngle_Vertical;
+            double angleToGoalDegrees = cameraMountAngle + targetOffsetAngle_Vertical;
             double angleToGoalRadians = angleToGoalDegrees * (3.14159 / 180);
 
             //calculate distance to target
             double distanceToTargetInches = (goalHeightInches - limelightLensHeightInches) / Math.tan(angleToGoalRadians);
 
-            return distanceToTargetInches;
+            if (limelightInverted) {
+                return (-distanceToTargetInches);
+            } else {
+                return distanceToTargetInches;
+            }
     }
 }
 
