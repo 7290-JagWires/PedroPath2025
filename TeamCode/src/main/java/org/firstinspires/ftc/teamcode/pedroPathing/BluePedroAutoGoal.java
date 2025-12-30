@@ -74,6 +74,20 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                     }
                 }
                 break;
+            case SCORE3:
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    if (dumpManager.isFinished()) {
+                        if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
+                            // scored pickup 1, drive to pickup 2
+                            pickupManager.start();
+                            pickupManager.setTotalBallCount(0);
+                            follower.followPath(paths.pickup2);
+                            follower.setMaxPower(1);
+                            setPathState(PathState.DRIVE_PICKUP2);
+                        }
+                    }
+                }
+                break;
             case DRIVE_PICKUP1:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup1Ball2);
@@ -157,6 +171,50 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         follower.followPath(paths.score2, true);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE2;
+                        intakeActive.intakeOff();
+                        dumpManager.start();
+                    }
+                }
+                break;
+            case DRIVE_PICKUP3:
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.pickup3Ball2);
+                    follower.setMaxPower(1);
+                    pathState = PathState.DRIVE_PICKUP3BALL2_END;
+                }
+                break;
+            case DRIVE_PICKUP3BALL2_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.pickup3Ball3, true);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP3BALL3_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP3BALL3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.endPickup3, true);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP3_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score3, true);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE3;
                         intakeActive.intakeOff();
                         dumpManager.start();
                     }

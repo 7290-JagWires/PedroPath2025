@@ -18,7 +18,7 @@ public class BluePaths {
     public static final Pose startPose = new Pose(17, 115, Math.toRadians(25));
     public static final Pose startPoseTriangle = new Pose(56, 9, Math.toRadians(90));
     public static final Pose shootPoint = new Pose(59, 85, Math.toRadians(155));
-    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(110));
+    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(120));
 
     //Common poses for all programs
     public static final Pose pickup1Pose = new Pose(37, 83, Math.toRadians(180));
@@ -149,7 +149,7 @@ public class BluePaths {
                 .build();
         score1Triangle = follower.pathBuilder()
                 .addPath(new BezierLine(endPickup1Pose, shootPointTriangle))
-                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPoint.getHeading())
+                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPointTriangle.getHeading())
                 .build();
         pickup2Triangle = follower.pathBuilder()
                 .addPath(new BezierLine(shootPointTriangle, pickup2Pose))
@@ -157,7 +157,7 @@ public class BluePaths {
                 .build();
         score2Triangle = follower.pathBuilder()
                 .addPath(new BezierLine(endPickup2Pose, shootPointTriangle))
-                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPoint.getHeading())
+                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPointTriangle.getHeading())
                 .build();
         pickup3Triangle = follower.pathBuilder()
                 .addPath(new BezierLine(shootPointTriangle, pickup3Pose))
