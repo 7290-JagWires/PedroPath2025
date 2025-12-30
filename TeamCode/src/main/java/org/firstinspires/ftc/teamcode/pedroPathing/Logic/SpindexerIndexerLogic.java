@@ -13,6 +13,8 @@ public class SpindexerIndexerLogic {
     private final SpindexerMotor motor;
     private final MagneticLimitSwitch limit;
     private static final double INDEX_POWER = .75;
+    private boolean limitSwitchAlreadyPressed = false; // Add this variable
+    // ...
     private final int ticksPerCompartment;
 
     // 0 = Comp1, 1 = Comp2, 2 = Comp3
@@ -115,85 +117,45 @@ public class SpindexerIndexerLogic {
         motor.setPower(-INDEX_POWER);
     }
 
-
-
-
-//    /**
-//     * This checks to see if the limit switch has been reached and stops the motor
-//     * if it has.
-//     * @return <code>true</code> if the limit switch has been reached and the motor stopped.
-//     * <code>false</code> if not.
-//     */
-//    public boolean spindexerLimitSwitchCheck() {
-//        if( limitSwitchTriggered()){
-//            motor.stop();
-//            return true;
-//        }
-//        return false;
-//    }
-
     /**
-     * This checks to see if the limit switch has been reached and stops the motor
-     * if it has. It also updates the compartment index.
-     */
-//    public boolean spindexerLimitSwitchCheck() {
-//        if (limitSwitchTriggered()) {
-//            motor.stop();
-//            justIndexed = true; // Signal that a move completed
-//
-//            // Update index based on which way we were going
-//            if (moveDirection == 1) {
-//                // Moving Forward: Increment index (0 -> 1 -> 2 -> 0)
-//                compartmentIndex++;
-//                if (compartmentIndex > 2) {
-//                    compartmentIndex = 0;
-//                }
-//            } else if (moveDirection == -1) {
-//                // Moving Backward: Decrement index (0 -> 2 -> 1 -> 0)
-//                compartmentIndex--;
-//                if (compartmentIndex < 0) {
-//                    compartmentIndex = 2;
-//                }
-//            }
-//
-//            // Reset direction since we are now stopped
-//            moveDirection = 0;
-//
-//            return true;
-//        }
-//        return false;
-//    }
-    /**
-     * The idea here is the limit switch can only be triggered after it has
-     * been false for at least one cycle. That way, the magnet sitting at the
-     * limit switch won't show it as continually triggered.
-     *
-     * @return <code>true</code> boolean if the switch was just triggered, <code>false</code> otherwise.
+     * Checks the limit switch and updates the current position.
+     * This method now only returns true on the RISING EDGE of the switch press,
+     * preventing it from returning true on multiple consecutive loops.
+     * @return true ONLY on the first loop cycle the switch is detected as pressed.
      */
     public boolean spindexerLimitSwitchCheck() {
+        // Your limitSwitchTriggered() method already handles the rising-edge logic.
+        // We can simplify this check significantly.
+        boolean triggeredJustNow = limitSwitchTriggered();
 
-        // Is the switch pressed right now?
-        boolean isPressedNow = limit.isTriggered();
-
-        // The "trigger" event happens when the switch WAS NOT pressed before,
-        // but IS pressed now.
-        if (isPressedNow && !limitSwitchTriggered) {
-            // Update the state for the next cycle
+        if (triggeredJustNow) {
             motor.stop();
-            limitSwitchTriggered = true;
-            opMode.telemetry.addLine("LIMIT SWITCH TRIGGERED");
-            return true; // This is the moment of transition
+
+            // Use the correct variable: compartmentIndex
+            // Update index based on which way we were going
+            if (moveDirection == 1) {
+                // Moving Forward: Increment index (0 -> 1 -> 2 -> 0)
+                compartmentIndex++;
+                if (compartmentIndex > 2) {
+                    compartmentIndex = 0;
+                }
+            } else if (moveDirection == -1) {
+                // Moving Backward: Decrement index (0 -> 2 -> 1 -> 0)
+                compartmentIndex--;
+                if (compartmentIndex < 0) {
+                    compartmentIndex = 2;
+                }
+            }
+
+            // Reset direction since we are now stopped
+            moveDirection = 0;
+            justIndexed = true; // Signal that a move completed
+
+            opMode.telemetry.addData("Spindexer Reached Pos", compartmentIndex);
+            return true; // The event happened right now!
         }
 
-        // If the switch is not pressed, we reset our state so we can detect the next press.
-        if (!isPressedNow) {
-            limitSwitchTriggered = false;
-        }
-
-        // If we get here, it means either the switch is not pressed,
-        // or it was already pressed on the previous cycle (being held down).
-        // In either case, it's not a new trigger event.
-        return false;
+        return false; // Not the exact moment of the trigger event.
     }
     public boolean spindexerLimitSwitchCheckPickup() {
 

@@ -58,9 +58,22 @@ public class Utilities {
 
         // Timers
         private final ElapsedTime pickupTimer = new ElapsedTime();
+
         private static final int LAUNCH_DELAY_MS = 500; // Example delay
 
-        // Constructor to receive all hardware and logic components
+        /**
+         * Initializes the PickupManager with all the necessary hardware components and logic modules.
+         * This constructor takes instances of hardware controllers (Door, Shooter, IntakeActive),
+         * sensor wrappers (ColorSensor, IndicatorLight), and logic handlers (SpindexerIndexerLogic)
+         * that the manager will orchestrate to perform the pickup sequence.
+         *
+         * @param door The {@link Door} object to control the intake door.
+         * @param shooter The {@link Shooter} object, used here to ensure it's stopped during pickup.
+         * @param intakeActive The {@link IntakeActive} object to control the intake mechanism.
+         * @param spindexerLogic The {@link SpindexerIndexerLogic} to manage the spindexer and indexer.
+         * @param colorSensor The {@link ColorSensor} to detect incoming balls.
+         * @param indicator The {@link IndicatorLight} to provide visual feedback on ball detection.
+         */
         public PickupManager(Door door, Shooter shooter, IntakeActive intakeActive, SpindexerIndexerLogic spindexerLogic, ColorSensor colorSensor, IndicatorLight indicator) {
             this.door = door;
             this.shooter = shooter;
@@ -70,7 +83,12 @@ public class Utilities {
             this.indicator = indicator;
         }
 
-        // Renamed from startPickup()
+        /**
+         * Initiates the pickup sequence.
+         * This method sets the state to {@code SPIN_UP}, unlocks and closes the door,
+         * resets the pickup counter, and stops the shooter. This prepares the robot to start
+         * looking for and picking up items.
+         */
         public void start() {
             pickupState = PickupState.SPIN_UP;
             door.unlock();
@@ -79,7 +97,27 @@ public class Utilities {
             shooter.stop();
         }
 
-        // Renamed from pickupItemsSM()
+        /**
+         * Updates the state machine for the pickup process. This method should be called repeatedly in a loop.
+         * It manages the transitions between different states of the pickup cycle.
+         * <p>
+         * The state machine progresses as follows:
+         * <ul>
+         *   <li><b>IDLE:</b> The machine is inactive.</li>
+         *   <li><b>SPIN_UP:</b> Prepares for pickup by closing the door, starting the intake, and then
+         *       immediately transitioning to the PICKUP state.</li>
+         *   <li><b>PICKUP:</b> After a brief delay (LAUNCH_DELAY_MS), it checks the color sensor for a ball.
+         *       If a ball is detected, it increments the pickup and total ball counts. If the robot still needs
+         *       to collect more balls (totalBallCount < 3), it commands the spindexer to move to the next
+         *       compartment and enters the WAITING_FOR_SPIN state. Otherwise, it transitions to FINISHED.</li>
+         *   <li><b>WAITING_FOR_SPIN:</b> Waits for the spindexer to finish rotating to the next compartment,
+         *       confirmed by the limit switch. Once the spindexer is in position, it either returns to the
+         *       PICKUP state to look for another ball or transitions to FINISHED if the required number of
+         *       balls for this cycle has been picked up.</li>
+         *   <li><b>FINISHED:</b> The pickup cycle is complete. The machine will remain in this state until
+         *       {@link #start()} is called again.</li>
+         * </ul>
+         */
         public void update() {
             switch (pickupState) {
                 case IDLE:
@@ -123,15 +161,32 @@ public class Utilities {
             }
         }
 
-        // Getter methods to check the state from the OpMode
+        /**
+         * Retrieves the current state of the pickup state machine.
+         *
+         * @return The current {@link PickupState} enum value, representing the state machine's progress.
+         */
         public PickupState getState() {
             return pickupState;
         }
 
+        /**
+         * Checks if the pickup sequence has completed.
+         *
+         * @return Returns {@code true} if the current state is {@link PickupState#FINISHED},
+         *         indicating the pickup process is done. Returns {@code false} otherwise.
+         */
         public boolean isFinished() {
             return pickupState == PickupState.FINISHED;
         }
 
+        /**
+         * Sets the total number of balls the robot is currently holding.
+         * This can be used to manually override or initialize the ball count, for example,
+         * at the beginning of a match or after a manual reset.
+         *
+         * @param count The new total ball count.
+         */
         public void setTotalBallCount(int count) {
             this.totalBallCount = count;
         }
@@ -141,6 +196,27 @@ public class Utilities {
         }
     }
 
+    /**
+     * Manages the automated process of dumping/shooting balls from the robot.
+     * <p>
+     * This class implements a state machine to control the sequence of actions required to shoot
+     * a predefined number of balls (typically 3). It coordinates the shooter, the spindexer, and
+     * the door to ensure a reliable dumping process. The manager handles spinning up the shooter,
+     * opening the door, and rotating the spindexer to feed each ball into the shooter mechanism.
+     * <p>
+     * The state machine progresses through the following states:
+     * <ul>
+     *   <li>{@link DumpState#IDLE}: The initial state where the manager is inactive.</li>
+     *   <li>{@link DumpState#SPIN_UP}: The shooter motor is started and given time to reach its target speed.</li>
+     *   <li>{@link DumpState#DUMPING}: The door is opened, and the spindexer is sequentially rotated
+     *       to feed each ball into the shooter. This state repeats until all balls are dumped.</li>
+     *   <li>{@link DumpState#FINISHED}: The dumping cycle is complete. The manager will remain in
+     *       this state until it is started again.</li>
+     * </ul>
+     * To use this class, create an instance with the required hardware components and call the
+     * {@link #update()} method repeatedly in the main loop of an OpMode. The {@link #start()}
+     * method begins the dumping sequence.
+     */
     public static class DumpManager {
 
         // Enum for state tracking
@@ -162,15 +238,28 @@ public class Utilities {
         private static final int LAUNCH_DELAY_MS = 500;
         private static final int TOTAL_BALLS_TO_DUMP = 3;
 
-        // Constructor to receive all hardware components
+
+        /**
+         * Initializes the DumpManager with the necessary hardware components.
+         * This constructor takes instances of hardware controllers (Shooter, Door) and logic handlers
+         * (SpindexerIndexerLogic) that the manager will use to execute the dumping sequence.
+         *
+         * @param shooter The {@link Shooter} object responsible for launching the balls.
+         * @param door The {@link Door} object used to control the opening/closing of the ball gate.
+         * @param spindexerLogic The {@link SpindexerIndexerLogic} to manage rotating the spindexer to the next ball.
+         */
         public DumpManager(Shooter shooter, Door door, SpindexerIndexerLogic spindexerLogic) {
             this.shooter = shooter;
             this.door = door;
             this.spindexerLogic = spindexerLogic;
         }
 
+
         /**
-         * Initiates the automated process of dumping balls.
+         * Initiates the pickup sequence.
+         * This method sets the state to {@code SPIN_UP}, unlocks and closes the door,
+         * resets the pickup counter, and stops the shooter. This prepares the robot to start
+         * looking for and picking up items.
          */
         public void start() {
             if (dumpState == DumpState.IDLE || dumpState == DumpState.FINISHED) {
@@ -182,7 +271,25 @@ public class Utilities {
         }
 
         /**
-         * Manages the state machine for dumping balls. Call this in a loop.
+         * Updates the state machine for the pickup process. This method should be called repeatedly in a loop.
+         * It manages the transitions between different states of the pickup cycle.
+         * <p>
+         * The state machine progresses as follows:
+         * <ul>
+         *   <li><b>IDLE:</b> The machine is inactive.</li>
+         *   <li><b>SPIN_UP:</b> Prepares for pickup by closing the door, starting the intake, and then
+         *       immediately transitioning to the PICKUP state.</li>
+         *   <li><b>PICKUP:</b> After a brief delay ({@code LAUNCH_DELAY_MS}), it checks the color sensor for a ball.
+         *       If a ball is detected, it increments the pickup and total ball counts. If the robot still needs
+         *       to collect more balls (totalBallCount < 3), it commands the spindexer to move to the next
+         *       compartment and enters the WAITING_FOR_SPIN state. Otherwise, it transitions to FINISHED.</li>
+         *   <li><b>WAITING_FOR_SPIN:</b> Waits for the spindexer to finish rotating to the next compartment,
+         *       confirmed by {@link SpindexerIndexerLogic#spindexerLimitSwitchCheckPickup()}. Once the spindexer
+         *       is in position, it either returns to the PICKUP state to look for another ball or transitions
+         *       to FINISHED if the required number of balls for this cycle ({@code pickupCount}) has been collected.</li>
+         *   <li><b>FINISHED:</b> The pickup cycle is complete. The machine will remain in this state until
+         *       {@link #start()} is called again.</li>
+         * </ul>
          */
         public void update() {
             switch (dumpState) {
@@ -213,11 +320,22 @@ public class Utilities {
             }
         }
 
-        // Getter methods to check the state from the OpMode
+        /**
+         * Retrieves the current state of the pickup process.
+         * This can be used to monitor the progress of the pickup state machine from outside the class.
+         *
+         * @return The current {@link DumpState} enum value (IDLE, SPIN_UP, PICKUP, WAITING_FOR_SPIN, or FINISHED).
+         */
         public DumpState getState() {
             return dumpState;
         }
 
+        /**
+         * Checks if the pickup sequence has completed.
+         *
+         * @return Returns {@code true} if the current state is {@code FINISHED}, indicating that the
+         * pickup cycle is complete. Returns {@code false} otherwise.
+         */
         public boolean isFinished() {
             return dumpState == DumpState.FINISHED;
         }
@@ -227,4 +345,117 @@ public class Utilities {
         }
     }
 
+
+    /**
+     * Manages a multi-step rotation of the spindexer.
+     * <p>
+     * This class implements a state machine to rotate the spindexer a specified number of times (1 or 2).
+     * It is designed to handle timed pauses between rotations to ensure reliable hardware operation.
+     * The state machine progresses as follows:
+     * <ul>
+     *   <li><b>IDLE:</b> The machine is inactive.</li>
+     *   <li><b>START_ROTATION:</b> Initiates the first rotation of the spindexer and moves to a waiting state.</li>
+     *   <li><b>WAIT_FOR_FIRST_SPIN:</b> Waits for the limit switch to confirm the first rotation is complete.
+     *       If more rotations are needed, it pauses before starting the next one. Otherwise, it finishes.</li>
+     *   <li><b>START_SECOND_ROTATION:</b> After a delay, it initiates the second rotation.</li>
+     *   <li><b>WAIT_FOR_SECOND_SPIN:</b> Waits for the limit switch to confirm the second rotation is complete, then finishes.</li>
+     *   <li><b>FINISHED:</b> The rotation sequence is complete.</li>
+     * </ul>
+     */
+    public static class SpindexerRotator {
+
+        public enum RotateState {IDLE, START_ROTATION, WAIT_FOR_FIRST_SPIN, START_SECOND_ROTATION, WAIT_FOR_SECOND_SPIN, FINISHED}
+
+        private RotateState rotateState = RotateState.IDLE;
+        private final SpindexerIndexerLogic spindexerLogic;
+        private final ElapsedTime timer = new ElapsedTime();
+        private int rotationsNeeded = 0;
+
+        private static final int ROTATION_PAUSE_MS = 500; // Pause between spins
+
+        /**
+         * Initializes the SpindexerRotator with necessary hardware logic.
+         *
+         * @param spindexerLogic The SpindexerIndexerLogic to manage spindexer movement.
+         */
+        public SpindexerRotator(SpindexerIndexerLogic spindexerLogic) {
+            this.spindexerLogic = spindexerLogic;
+        }
+
+        /**
+         * Starts the rotation sequence.
+         *
+         * @param numberOfRotations The number of compartments to rotate (1 or 2).
+         */
+        public void start(int numberOfRotations) {
+            if (rotateState == RotateState.IDLE || rotateState == RotateState.FINISHED) {
+                if (numberOfRotations > 0 && numberOfRotations <= 2) {
+                    this.rotationsNeeded = numberOfRotations;
+                    this.rotateState = RotateState.START_ROTATION;
+                } else {
+                    // If 0 or invalid number, just go straight to finished.
+                    this.rotationsNeeded = 0;
+                    this.rotateState = RotateState.FINISHED;
+                }
+            }
+        }
+
+        /**
+         * Updates the state machine for the rotation process. Call this method in a loop.
+         */
+        public void update() {
+            switch (rotateState) {
+                case IDLE:
+                    break;
+
+                case START_ROTATION:
+                    spindexerLogic.nextCompartment(); // Start the first spin
+                    timer.reset();
+                    rotateState = RotateState.WAIT_FOR_FIRST_SPIN;
+                    break;
+
+                case WAIT_FOR_FIRST_SPIN:
+                    // Wait for the hardware to confirm the spin is complete
+                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                        if (rotationsNeeded == 1) {
+                            // If we only needed one spin, we are done.
+                            rotateState = RotateState.FINISHED;
+                        } else {
+                            // If we need another spin, start the timer for a pause.
+                            timer.reset();
+                            rotateState = RotateState.START_SECOND_ROTATION;
+                        }
+                    }
+                    break;
+
+                case START_SECOND_ROTATION:
+                    // Wait for the pause to complete before starting the next spin
+                    if (timer.milliseconds() > ROTATION_PAUSE_MS) {
+                        spindexerLogic.nextCompartment(); // Start the second spin
+                        rotateState = RotateState.WAIT_FOR_SECOND_SPIN;
+                    }
+                    break;
+
+                case WAIT_FOR_SECOND_SPIN:
+                    // Wait for the hardware to confirm the second spin is complete
+                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                        rotateState = RotateState.FINISHED;
+                    }
+                    break;
+
+                case FINISHED:
+                    // Do nothing until started again.
+                    break;
+            }
+        }
+
+        /**
+         * Checks if the rotation sequence has completed.
+         *
+         * @return Returns true if the state is FINISHED.
+         */
+        public boolean isFinished() {
+            return rotateState == RotateState.FINISHED;
+        }
+    }
 }

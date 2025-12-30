@@ -30,9 +30,48 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 // drive from start to scoring position
                 follower.followPath(paths.scorePreload, true);
                 follower.setMaxPower(1);
-                setPathState(PathState.SCORE_PRELOAD);
+                setPathState(PathState.DETECT_TAG_WHILE_DRIVING);
                 break;
+            case DETECT_TAG_WHILE_DRIVING:            // This logic should only run ONCE.
+                if (!tagDetectionLogicHasRun) {
+                    int detectedTagId = limelight.getTagId();
 
+                    // Failsafe: If no tag is seen by the time we call this, assume a default (e.g., center/22)
+                    if (detectedTagId == -1) {
+                        detectedTagId = 21; // Default to Center if nothing is visible
+                        telemetry.addLine("!!! No Tag Seen, Defaulting to Center !!!");
+                    }
+
+                    // --- DECISION LOGIC ---
+                    // ASSUMING WE preload with TAG_ID 23 (PPG)
+                    // TAG_ID 21 (GPP) -> Needs Purple. Our preload is correct. Do nothing.
+                    // TAG_ID 22 (PGP) -> Needs Green. We must rotate 1 position.
+                    // TAG_ID 23 (PPG) -> Needs Purple. Our preload is correct. Do nothing.
+
+                    if (detectedTagId == 21) {
+                        telemetry.addLine("Tag " + detectedTagId + " detected, rotating to Green ball.");
+                        // Command the spindexer to move 2 position.
+                        spindexerRotator.start(2);
+                    } else if (detectedTagId == 22) {
+                        telemetry.addLine("Tag " + detectedTagId + " detected, rotating to next Purple ball.");
+                        // Command the spindexer to move 1 position.
+                        spindexerRotator.start(1);
+                    } else {
+                        telemetry.addLine("Tag " + detectedTagId + " detected, Purple ball is correct.");
+                        spindexerRotator.start(0);
+                    }
+
+                    // Mark that we have made our decision so this block doesn't run again.
+                    tagDetectionLogicHasRun = true;
+                    setPathState(PathState.WAIT_FOR_SPIN);
+                }
+                break;
+            case WAIT_FOR_SPIN:
+                if (!follower.isBusy() && spindexerRotator.isFinished()) {
+                    dumpManager.start();
+                    setPathState(PathState.SCORE_PRELOAD);
+                }
+                break;
             case SCORE_PRELOAD:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     if (dumpManager.isFinished()) {

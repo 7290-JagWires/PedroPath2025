@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.SpindexerMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
@@ -14,6 +15,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.PickupManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.SpindexerRotator;
 
 // This class cannot be run from the Driver Station because it is 'abstract'
 public abstract class BaseAutonomous extends OpMode {
@@ -23,6 +25,8 @@ public abstract class BaseAutonomous extends OpMode {
     protected Timer pathTimer, opModeTimer;
     static final double DOOR_TIMER_DELAY = 2.75;
     private static final int TICKS_PER_COMPARTMENT = 1354;
+    public boolean tagDetectionLogicHasRun = false;
+    private int startingTagId = -1;
 
     // Hardware
     protected IntakeActive intakeActive;
@@ -30,15 +34,18 @@ public abstract class BaseAutonomous extends OpMode {
     protected Door door;
     protected SpindexerMotor spindexerMotor;
     protected MagneticLimitSwitch spindexerMag;
+    protected LimelightCamera limelight; // Make sure to add your LimelightCamera
+
 
     // Logic and Utility Managers
     protected SpindexerIndexerLogic spindexerLogic;
     protected PickupManager pickupManager;
     protected DumpManager dumpManager;
+    protected SpindexerRotator spindexerRotator;
 
     // State Machine
     public enum PathState {
-        DRIVE_START_SCORE, SCORE_PRELOAD, SCORE1, SCORE2, SCORE3,
+        DRIVE_START_SCORE, DETECT_TAG_WHILE_DRIVING, WAIT_FOR_SPIN, SCORE_PRELOAD, SCORE1, SCORE2, SCORE3,
         DRIVE_PICKUP1, DRIVE_PICKUP1BALL2_END, DRIVE_PICKUP1BALL3_END, DRIVE_PICKUP1_END,
         DRIVE_PICKUP2, DRIVE_PICKUP2BALL2_END, DRIVE_PICKUP2BALL3_END, DRIVE_PICKUP2_END,
         DRIVE_PICKUP3, DRIVE_PICKUP3BALL2_END, DRIVE_PICKUP3BALL3_END, DRIVE_PICKUP3_END,
@@ -57,6 +64,7 @@ public abstract class BaseAutonomous extends OpMode {
     public void init() {
         // Set initial state
         pathState = PathState.DRIVE_START_SCORE;
+        tagDetectionLogicHasRun = false;
 
         // Initialize timers and follower
         pathTimer = new Timer();
@@ -71,15 +79,32 @@ public abstract class BaseAutonomous extends OpMode {
         IndicatorLight indicator = new IndicatorLight(hardwareMap, "rgbServo");
         spindexerMotor = new SpindexerMotor(hardwareMap);
         spindexerMag = new MagneticLimitSwitch(hardwareMap, "magnetic_limit_sensor");
+        limelight = new LimelightCamera(hardwareMap, "limelight");
 
         // Initialize logic and utility managers
         spindexerLogic = new SpindexerIndexerLogic(this, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
+        spindexerRotator = new SpindexerRotator(spindexerLogic);
+
         dumpManager = new DumpManager(shooter, door, spindexerLogic);
         pickupManager = new PickupManager(door, shooter, intakeActive, spindexerLogic, colorSensor, indicator);
+        limelight.setPipeline(0); // Make sure it's on your AprilTag pipeline
+        limelight.start();
+        tagDetectionLogicHasRun = false;
+        startingTagId = -1; // Reset the tag ID at the beginning of every init
 
         // Call the abstract methods that the child class will define
         buildPaths();
         setStartingPose();
+    }
+    @Override
+    public void init_loop() {
+        startingTagId = limelight.getTagId();
+
+        // Add live telemetry for the AprilTag ID
+        telemetry.addData("Status", "Ready for Start");
+        telemetry.addData("Detected Tag ID", startingTagId);
+        telemetry.addLine("Point camera at tag to verify detection.");
+        telemetry.update();
     }
 
     @Override
@@ -93,6 +118,7 @@ public abstract class BaseAutonomous extends OpMode {
         // Update all managers and state machines
         follower.update();
         dumpManager.update();
+        spindexerRotator.update();
         pickupManager.update();
         autonomousPathUpdate(); // This calls the Blue or Red specific implementation
 
@@ -108,5 +134,8 @@ public abstract class BaseAutonomous extends OpMode {
     public void setPathState(PathState newState){
         pathState = newState;
         pathTimer.resetTimer();
+    }
+    public int getStartingTagId() {
+        return startingTagId;
     }
 }
