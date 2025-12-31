@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.mechanisms;
+package org.firstinspires.ftc.teamcode.pedroPathing.examples;
 
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;

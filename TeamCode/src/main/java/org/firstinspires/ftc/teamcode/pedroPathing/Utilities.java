@@ -287,7 +287,7 @@ public class Utilities {
          *       to collect more balls (totalBallCount < 3), it commands the spindexer to move to the next
          *       compartment and enters the WAITING_FOR_SPIN state. Otherwise, it transitions to FINISHED.</li>
          *   <li><b>WAITING_FOR_SPIN:</b> Waits for the spindexer to finish rotating to the next compartment,
-         *       confirmed by {@link SpindexerIndexerLogic#spindexerLimitSwitchCheckPickup()}. Once the spindexer
+         *       confirmed by {@link SpindexerIndexerLogic#()}. Once the spindexer
          *       is in position, it either returns to the PICKUP state to look for another ball or transitions
          *       to FINISHED if the required number of balls for this cycle ({@code pickupCount}) has been collected.</li>
          *   <li><b>FINISHED:</b> The pickup cycle is complete. The machine will remain in this state until

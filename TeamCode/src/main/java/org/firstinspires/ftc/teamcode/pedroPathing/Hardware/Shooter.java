@@ -19,6 +19,7 @@ public class Shooter {
     public Shooter(OpMode opMode) {
         myOpMode = opMode;
 
+
         shooter = myOpMode.hardwareMap.get(DcMotorEx.class, "shooter");
 
         // Start in encoder mode to allow velocity control later

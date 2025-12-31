@@ -12,7 +12,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 // Import your mechanism class
 // import org.firstinspires.ftc.teamcode.mechanisms.FlywheelExampleServo;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-import org.firstinspires.ftc.teamcode.pedroPathing.mechanisms.FlywheelExampleServo;
 
 @Autonomous
 @Disabled
