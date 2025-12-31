@@ -25,46 +25,33 @@ public class BluePedroAutoGoal extends BaseAutonomous {
     public void autonomousPathUpdate() {
         switch (pathState) {
             case DRIVE_START_SCORE:
-                dumpManager.start();
+                // Get the tag ID that was detected during the init_loop
+                int detectedTagId = getStartingTagId();
 
-                // drive from start to scoring position
-                follower.followPath(paths.scorePreload, true);
-                follower.setMaxPower(1);
-                setPathState(PathState.DETECT_TAG_WHILE_DRIVING);
-                break;
-            case DETECT_TAG_WHILE_DRIVING:            // This logic should only run ONCE.
-                if (!tagDetectionLogicHasRun) {
-                    int detectedTagId = limelight.getTagId();
-
-                    // Failsafe: If no tag is seen by the time we call this, assume a default (e.g., center/22)
-                    if (detectedTagId == -1) {
-                        detectedTagId = 21; // Default to Center if nothing is visible
-                        telemetry.addLine("!!! No Tag Seen, Defaulting to Center !!!");
-                    }
-
-                    // --- DECISION LOGIC ---
-                    // ASSUMING WE preload with TAG_ID 23 (PPG)
-                    // TAG_ID 21 (GPP) -> Needs Purple. Our preload is correct. Do nothing.
-                    // TAG_ID 22 (PGP) -> Needs Green. We must rotate 1 position.
-                    // TAG_ID 23 (PPG) -> Needs Purple. Our preload is correct. Do nothing.
-
-                    if (detectedTagId == 21) {
-                        telemetry.addLine("Tag " + detectedTagId + " detected, rotating to Green ball.");
-                        // Command the spindexer to move 2 position.
-                        spindexerRotator.start(2);
-                    } else if (detectedTagId == 22) {
-                        telemetry.addLine("Tag " + detectedTagId + " detected, rotating to next Purple ball.");
-                        // Command the spindexer to move 1 position.
-                        spindexerRotator.start(1);
-                    } else {
-                        telemetry.addLine("Tag " + detectedTagId + " detected, Purple ball is correct.");
-                        spindexerRotator.start(0);
-                    }
-
-                    // Mark that we have made our decision so this block doesn't run again.
-                    tagDetectionLogicHasRun = true;
-                    setPathState(PathState.WAIT_FOR_SPIN);
+                // Failsafe: If no tag was ever seen, default to one. 23 is our preload
+                if (detectedTagId == -1) {
+                    detectedTagId = 23; // Default to Right Tag
+                    telemetry.addLine("!!! No Tag Seen During Init, Defaulting to 23 !!!");
                 }
+
+                // ASSUMING WE preload for TAG_ID 23
+                if (detectedTagId == 21) { // Left Tag
+                    // Preloaded for 23, need Left. Spin 2 times.
+                    spindexerRotator.start(2);
+                } else if (detectedTagId == 22) { // Center Tag
+                    // Preloaded for 23, need Center. Spin 1 time.
+                    spindexerRotator.start(1);
+                } else { // Tag is 23 (our preload)
+                    // Preloaded for 23, need Right. Do nothing.
+                    spindexerRotator.start(0);
+                }
+
+                // 4. Start driving the path (non-blocking which is the falst command)
+                follower.followPath(paths.scorePreload, false);
+                follower.setMaxPower(1);
+
+                // 5. Immediately go to the waiting state.
+                setPathState(PathState.WAIT_FOR_SPIN);
                 break;
             case WAIT_FOR_SPIN:
                 if (!follower.isBusy() && spindexerRotator.isFinished()) {
@@ -73,16 +60,13 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 }
                 break;
             case SCORE_PRELOAD:
-                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
-                    if (dumpManager.isFinished()) {
-                        if (pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
-                            // just scored preload, drive to pickup point 1
-                            pickupManager.start();
-                            pickupManager.setTotalBallCount(0);
-                            follower.followPath(paths.pickup1);
-                            setPathState(PathState.DRIVE_PICKUP1);
-                        }
-                    }
+                // This state's job is unchanged: wait for the dumper to finish.
+                if (dumpManager.isFinished()) {
+                    // Preload scored. Move to the next action.
+                    pickupManager.start();
+                    pickupManager.setTotalBallCount(0);
+                    follower.followPath(paths.pickup1);
+                    setPathState(PathState.DRIVE_PICKUP1);
                 }
                 break;
             case SCORE1:
@@ -223,7 +207,6 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 }
                 break;
             case DRIVE_PICKUP3BALL2_END:
-                pickupManager.update(); // Make sure SM is running
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
