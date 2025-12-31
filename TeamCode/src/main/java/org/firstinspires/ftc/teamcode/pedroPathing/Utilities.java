@@ -145,13 +145,14 @@ public class Utilities {
                     }
                     break;
                 case WAITING_FOR_SPIN:
-                    if (spindexerLogic.spindexerLimitSwitchCheckPickup()) {
-                        pickupTimer.reset();
-                        if (pickupCount >= 1) {
-                            pickupState = PickupState.FINISHED;
-                        } else {
-                            pickupState = PickupState.PICKUP;
-                        }
+//                    if (spindexerLogic.spindexerLimitSwitchCheckPickup()) {
+                        if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                            pickupTimer.reset();
+                            if (pickupCount == 1) {
+                                pickupState = PickupState.FINISHED;
+                            } else {
+                                pickupState = PickupState.PICKUP;
+                            }
                     }
                     break;
                 case FINISHED:
@@ -232,6 +233,7 @@ public class Utilities {
         private final Shooter shooter;
         private final Door door;
         private final SpindexerIndexerLogic spindexerLogic;
+        private final SpindexerRotator spindexerRotator; // <-- ADD THIS LINE
 
         // Constants
         private static final int SHOOTER_SPINUP_MS = 2000;
@@ -248,10 +250,11 @@ public class Utilities {
          * @param door The {@link Door} object used to control the opening/closing of the ball gate.
          * @param spindexerLogic The {@link SpindexerIndexerLogic} to manage rotating the spindexer to the next ball.
          */
-        public DumpManager(Shooter shooter, Door door, SpindexerIndexerLogic spindexerLogic) {
+        public DumpManager(Shooter shooter, Door door, SpindexerIndexerLogic spindexerLogic,SpindexerRotator spindexerRotator) {
             this.shooter = shooter;
             this.door = door;
             this.spindexerLogic = spindexerLogic;
+            this.spindexerRotator = spindexerRotator;
         }
 
 

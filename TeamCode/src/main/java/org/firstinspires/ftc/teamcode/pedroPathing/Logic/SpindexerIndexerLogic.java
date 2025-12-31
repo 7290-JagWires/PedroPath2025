@@ -109,14 +109,6 @@ public class SpindexerIndexerLogic {
         motor.setPower(INDEX_POWER);
     }
 
-    public void previousCompartment() {
-
-        moveDirection = -1; // Record we are moving backward
-        motor.setModeRunUsingEncoder();
-        // reverse direction
-        motor.setPower(-INDEX_POWER);
-    }
-
     /**
      * Checks the limit switch and updates the current position.
      * This method now only returns true on the RISING EDGE of the switch press,
@@ -157,33 +149,6 @@ public class SpindexerIndexerLogic {
 
         return false; // Not the exact moment of the trigger event.
     }
-    public boolean spindexerLimitSwitchCheckPickup() {
-
-        // Is the switch pressed right now?
-        boolean isPressedNow = limit.isTriggered();
-
-        // The "trigger" event happens when the switch WAS NOT pressed before,
-        // but IS pressed now.
-        if (isPressedNow && !limitSwitchTriggered) {
-            // Update the state for the next cycle
-            motor.stop();
-            limitSwitchTriggered = true;
-            opMode.telemetry.addLine("LIMIT SWITCH TRIGGERED");
-            return true; // This is the moment of transition
-        }
-
-        // If the switch is not pressed, we reset our state so we can detect the next press.
-        if (!isPressedNow) {
-            limitSwitchTriggered = false;
-        }
-
-        // If we get here, it means either the switch is not pressed,
-        // or it was already pressed on the previous cycle (being held down).
-        // In either case, it's not a new trigger event.
-        return false;
-    }
-
-
     public int getIntakeCompartment() { return compartmentIndex + 1; }
     public int getShooterCompartment() { return ((compartmentIndex + 1) % 3) + 1; }
     public int getNextUpCompartment() { return ((compartmentIndex + 2) % 3) + 1; }

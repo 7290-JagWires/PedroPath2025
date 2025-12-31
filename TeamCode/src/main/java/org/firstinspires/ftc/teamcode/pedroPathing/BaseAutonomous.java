@@ -85,7 +85,7 @@ public abstract class BaseAutonomous extends OpMode {
         spindexerLogic = new SpindexerIndexerLogic(this, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
 
-        dumpManager = new DumpManager(shooter, door, spindexerLogic);
+        dumpManager = new DumpManager(shooter, door, spindexerLogic,spindexerRotator);
         pickupManager = new PickupManager(door, shooter, intakeActive, spindexerLogic, colorSensor, indicator);
         limelight.setPipeline(0); // Make sure it's on your AprilTag pipeline
         limelight.start();
@@ -126,6 +126,7 @@ public abstract class BaseAutonomous extends OpMode {
         telemetry.addData("path state", pathState.toString());
         telemetry.addData("dump state", dumpManager.getState());
         telemetry.addData("pickup state", pickupManager.getState());
+        telemetry.addData("Ball Count", pickupManager.getTotalBallCount());
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());

@@ -100,7 +100,7 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
                 }
                 break;
             case SCORE3:
-//                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     if (dumpManager.isFinished()) {
                         if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // scored pickup 3, drive to pickup 2
@@ -111,7 +111,7 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
                     }
-//                }
+                }
                 break;
             case DRIVE_PICKUP1:
                 if (!follower.isBusy()) {
@@ -202,38 +202,49 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
                 }
                 break;
             case DRIVE_PICKUP3:
-                // This state handles the entire 3-ball pickup sequence for the first stack.
-                // It waits for BOTH the follower to finish driving AND the pickupManager to be ready.
-                if (!follower.isBusy() && pickupManager.isFinished()) {
-
-                    int ballsCollected = pickupManager.getTotalBallCount();
-                    telemetry.addData("Pickup3 Stack", "Balls Collected: " + ballsCollected);
-
-                    switch (ballsCollected) {
-                        case 0:
-                            // We have 0 balls, drive to the next one.
-                            pickupManager.start(); // Start intake for the next ball
-                            follower.followPath(paths.pickup3Ball2, true);
-                            break;
-                        case 1:
-                            // We have 1 ball, drive to the final one.
-                            pickupManager.start(); // Start intake for the next ball
-                            follower.followPath(paths.pickup3Ball3, true);
-                            break;
-                        case 2:
-                            // We have 2 balls, drive past the final one to collect it.
-                            pickupManager.start(); // Start intake for the final ball
-                            follower.followPath(paths.endPickup3, true);
-                            break;
-                        case 3:
-                            // We have collected all 3 balls. Time to go score.
-                            intakeActive.intakeOff();
-                            dumpManager.start();
-                            follower.followPath(paths.score3Triangle, false); // Use non-blocking
-                            setPathState(PathState.SCORE3);
-                            break;
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.pickup3Ball2);
+                    follower.setMaxPower(1);
+                    pathState = PathState.DRIVE_PICKUP3BALL2_END;
+                }
+                break;
+            case DRIVE_PICKUP3BALL2_END:
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.pickup3Ball3, true);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP3BALL3_END;
+                        pickupManager.start(); // Restart for the next pickup
                     }
                 }
+                break;
+            case DRIVE_PICKUP3BALL3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.endPickup3, true);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP3_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score3Triangle, true);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE3;
+                        intakeActive.intakeOff();
+                        dumpManager.start();
+                    }
+                }
+                break;
+            default:
                 break;
         }
     }
