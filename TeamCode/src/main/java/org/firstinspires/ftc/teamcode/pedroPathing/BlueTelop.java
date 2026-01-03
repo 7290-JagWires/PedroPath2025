@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -7,6 +9,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
+import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
 
 @TeleOp()
 public class BlueTelop extends OpMode {
@@ -27,6 +30,7 @@ public class BlueTelop extends OpMode {
     // Homing state variables
     private enum HomingState { HOMING, COMPLETE }
     private HomingState homingState = HomingState.HOMING;
+    private Follower follower;
 
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
@@ -39,6 +43,17 @@ public class BlueTelop extends OpMode {
         robot = new Robot(this);
         colorSensor = new ColorSensor(hardwareMap, "color_sensor");
         indicator = new IndicatorLight(hardwareMap, "rgbServo");
+
+        follower = Constants.createFollower(hardwareMap);
+        Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
+        follower.setPose(startingPose);
+
+        // Initialize all your other robot hardware here
+        // example: leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+
+        telemetry.addLine("TeleOp Initialized");
+        telemetry.addData("Pose Loaded From Auto", "X: %.2f, Y: %.2f, H: %.2f",
+                startingPose.getX(), startingPose.getY(), startingPose.getHeading());
 
         telemetry.addLine("Initialization Complete. Ready for Homing.");
         telemetry.update();
@@ -99,6 +114,9 @@ public class BlueTelop extends OpMode {
             robot.door.forceClose();
             robot.spindexer.justIndexed = false;
         }
+
+        // IMPORTANT: Update the follower in every loop cycle to track position
+        follower.update();
 
         // --- Telemetry ---
         updateTelemetry();
@@ -182,6 +200,10 @@ public class BlueTelop extends OpMode {
     }
 
     private void updateTelemetry() {
+        // Display the robot's current position on the telemetry
+        Pose currentPose = follower.getPose();
+        telemetry.addData("Current Pose", "X: %.2f, Y: %.2f, H: %.2f",
+                currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         telemetry.addData("Dump Mode", dumpMode);
         telemetry.addData("Intake Comp", robot.spindexer.getIntakeCompartment());
         telemetry.addData("Shooter Comp", robot.spindexer.getShooterCompartment());

@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Shooter {
@@ -16,6 +17,10 @@ public class Shooter {
     private static final double SHOOTER_REVERSE = -0.9;
     private static final double SHOOTER_OFF     = 0.0;
 
+    private static final double SHOOT_TRIANGLE_VELOCITY = 2650;
+    private static final double SHOOT_GOAL_VELOCITY = 1900;
+
+
     public Shooter(OpMode opMode) {
         myOpMode = opMode;
 
@@ -23,12 +28,11 @@ public class Shooter {
         shooter = myOpMode.hardwareMap.get(DcMotorEx.class, "shooter");
 
         // Start in encoder mode to allow velocity control later
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        shooter.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        // Force brake when power = 0 (helps but not enough alone)
-        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooter.setVelocity(SHOOTER_OFF);
 
-        shooter.setPower(0);
+        shooter.setDirection(DcMotorSimple.Direction.FORWARD);
     }
 
     // -------------------------------------------------------------

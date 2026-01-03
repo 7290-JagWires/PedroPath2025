@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.Pose;
 import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
@@ -16,6 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.PickupManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.SpindexerRotator;
+import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
 
 // This class cannot be run from the Driver Station because it is 'abstract'
 public abstract class BaseAutonomous extends OpMode {
@@ -138,5 +140,14 @@ public abstract class BaseAutonomous extends OpMode {
     }
     public int getStartingTagId() {
         return startingTagId;
+    }
+
+    @Override
+    public void stop() {
+        // Get the robot's current pose from the follower
+        Pose lastPose = follower.getPose();
+
+        // Save this pose to a file using our utility class
+        PoseStorage.savePoseToFile(hardwareMap, lastPose);
     }
 }
