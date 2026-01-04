@@ -11,22 +11,21 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
+
+import kotlin.time.Instant;
 
 @TeleOp()
 public class BlueTelop extends OpMode {
 
     private static final int LAUNCH_DELAY_MILLISECONDS = 1000;
 
+    protected DumpManager dumpManager;
     // Class member variables
     private Robot robot;
     private ColorSensor colorSensor;
     private IndicatorLight indicator;
 
-    private boolean dumpMode = false;  // toggle for RT dump-all
-    private boolean prevRT = false;
-    private int dumpCount = 0;
-
-    private final ElapsedTime launchTimer = new ElapsedTime();
 
     // Homing state variables
     private enum HomingState { HOMING, COMPLETE }
@@ -46,6 +45,7 @@ public class BlueTelop extends OpMode {
         robot = new Robot(this);
         colorSensor = new ColorSensor(hardwareMap, "color_sensor");
         indicator = new IndicatorLight(hardwareMap, "rgbServo");
+        dumpManager = new DumpManager(robot.shooter, robot.door, robot.spindexerLogic,robot.spindexerRotator);
 
         follower = Constants.createFollower(hardwareMap);
         Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
@@ -106,12 +106,11 @@ public class BlueTelop extends OpMode {
         Utilities.isBall(colorSensor, indicator);
 
         // --- Driver 1: Drivetrain ---
-        handleDriveControls();
+        Utilities.handleRobotCentricDrive(gamepad1, robot);
 
         // --- Driver 2: Mechanisms ---
-        handleDumpMode();
-
-        manualShootManager.update(gamepad2.y, dumpMode);
+        // The manager Instant.Companion.now handles the toggle logic and the entire state machine.
+        dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
 
         // Run the main robot update loop
         robot.update();
@@ -142,51 +141,13 @@ public class BlueTelop extends OpMode {
     //                            Helper Methods for the Loop()
     // =========================================================================================
 
-    private void handleDriveControls() {
-        double y = -gamepad1.left_stick_y;  // forward/back
-        double x =  gamepad1.left_stick_x;  // strafe
-        double r =  gamepad1.right_stick_x; // rotate
-        robot.mecanumDrive.drive(x, y, r);
-    }
-
-    private void handleDumpMode() {
-        // Toggle logic for dump mode
-        boolean rt = gamepad2.right_trigger > 0.6;
-        if (rt && !prevRT) {
-            dumpMode = !dumpMode;
-            if (dumpMode) {
-                dumpCount = 0;
-                launchTimer.reset();
-            }
-        }
-        prevRT = rt;
-
-        // Main dump mode logic
-        if (dumpMode) {
-            robot.door.forceOpenLock();
-
-            // Auto-advance spindexer
-            if (launchTimer.milliseconds() > LAUNCH_DELAY_MILLISECONDS) {
-                robot.spindexer.nextCompartment();
-                dumpCount++; // Increment count each time we advance
-                launchTimer.reset();
-            }
-
-            // End dump mode after 3 compartments
-            if (dumpCount >= 3) {
-                dumpMode = false;
-                robot.door.unlock();
-                robot.door.forceClose();
-            }
-        }
-    }
-
     private void updateTelemetry() {
         // Display the robot's current position on the telemetry
         Pose currentPose = follower.getPose();
         telemetry.addData("Current Pose", "X: %.2f, Y: %.2f, H: %.2f",
                 currentPose.getX(), currentPose.getY(), currentPose.getHeading());
-        telemetry.addData("Dump Mode", dumpMode);
+        telemetry.addData("Dump Mode Active", dumpManager.isDumping());
+        telemetry.addData("Dump State", dumpManager.getState());
         telemetry.addData("Intake Comp", robot.spindexer.getIntakeCompartment());
         telemetry.addData("Shooter Comp", robot.spindexer.getShooterCompartment());
         telemetry.addData("Next Up", robot.spindexer.getNextUpCompartment());

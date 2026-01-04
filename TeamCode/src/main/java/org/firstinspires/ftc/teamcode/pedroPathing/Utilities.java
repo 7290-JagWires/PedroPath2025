@@ -8,6 +8,9 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
+import com.qualcomm.robotcore.hardware.Gamepad;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
+
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -40,6 +43,23 @@ public class Utilities {
             indicator.off();
             return false;
         }
+    }
+
+    /**
+     * Handles standard robot-centric mecanum drive controls.
+     * Reads joystick values from the gamepad and sends power commands to the robot's drive system.
+     *
+     * @param gamepad The gamepad to read joystick inputs from (typically gamepad1).
+     * @param robot   The main Robot object that contains the mecanumDrive system.
+     */
+    public static void handleRobotCentricDrive(Gamepad gamepad, Robot robot) {
+        // Read joystick values
+        double y = -gamepad.left_stick_y;  // Forward/Backward. Negated for standard orientation.
+        double x =  gamepad.left_stick_x;  // Strafe Left/Right.
+        double r =  gamepad.right_stick_x; // Rotate Left/Right.
+
+        // Send power commands to the drive system
+        robot.mecanumDrive.drive(x, y, r);
     }
     public static class PickupManager {
         // Enums for state tracking
@@ -242,6 +262,9 @@ public class Utilities {
         private static final int LAUNCH_DELAY_MS = 500;
         private static final int TOTAL_BALLS_TO_DUMP = 3;
 
+        private boolean isTeleOpDumping = false;
+        private boolean prevTriggerState = false;
+
 
         /**
          * Initializes the DumpManager with the necessary hardware components.
@@ -344,8 +367,47 @@ public class Utilities {
         public boolean isFinished() {
             return dumpState == DumpState.FINISHED;
         }
+        public void updateTeleOp(boolean triggerPressed) {
+            // 1. Handle the toggle logic
+            if (triggerPressed && !prevTriggerState) {
+                isTeleOpDumping = !isTeleOpDumping;
 
-        public int getDumpCount() {
+                // If we are starting a new dump sequence...
+                if (isTeleOpDumping) {
+                    // Call the existing autonomous start() method to begin the sequence
+                    this.start();
+                }
+            }
+            prevTriggerState = triggerPressed;
+
+            // 2. Run the state machine if we are in dump mode
+            if (isTeleOpDumping) {
+                // Open the door while dumping
+                door.forceOpenLock();
+
+                // The existing update() method runs the core state machine (SPIN_UP, DUMPING, etc.)
+                this.update();
+
+                // 3. Check if the sequence has finished
+                if (this.isFinished()) {
+                    isTeleOpDumping = false; // Turn off dump mode
+
+                    // Reset hardware to a safe state
+                    shooter.stop();
+                    door.unlock();
+                    door.forceClose();
+                }
+            }
+        }
+
+        /**
+         * A getter to check if the TeleOp dump mode is active.
+         * @return true if the dump sequence is running, false otherwise.
+         */
+        public boolean isDumping() {
+            return isTeleOpDumping;
+        }
+                public int getDumpCount() {
             return dumpCount;
         }
     }
@@ -497,7 +559,7 @@ public class Utilities {
         public void update(boolean shootButtonPressed, boolean isDumpModeActive) {
             switch (shootState) {
                 case IDLE:
-                    // If the Y button is pressed and we're not busy with another sequence...
+                    // If the button is pressed and we're not busy with another sequence...
                     if (shootButtonPressed && !isDumpModeActive) {
                         // 1. Open the door
                         door.forceOpenLock();
