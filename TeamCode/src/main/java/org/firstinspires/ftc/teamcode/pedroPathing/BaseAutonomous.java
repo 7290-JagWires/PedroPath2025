@@ -148,6 +148,6 @@ public abstract class BaseAutonomous extends OpMode {
         Pose lastPose = follower.getPose();
 
         // Save this pose to a file using our utility class
-//        PoseStorage.savePoseToFile(hardwareMap, lastPose);
+        PoseStorage.savePoseToFile(hardwareMap, lastPose);
     }
 }

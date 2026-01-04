@@ -57,7 +57,7 @@ public class Robot {
         pinpoint = new PinpointLocalizer(opMode.hardwareMap);
         colorSensor = new ColorSensor(opMode.hardwareMap, "color_sensor");
         indicator = new IndicatorLight(opMode.hardwareMap, "rgbServo");
-        spindexerMotor = new SpindexerMotor(hardwareMap);
+        spindexerMotor = new SpindexerMotor(opMode.hardwareMap);
         spindexerLogic = new SpindexerIndexerLogic(opMode, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
         dumpManager = new DumpManager(shooter, door, spindexerLogic,spindexerRotator);
