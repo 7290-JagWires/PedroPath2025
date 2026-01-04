@@ -10,6 +10,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
 
 @TeleOp()
 public class BlueTelop extends OpMode {
@@ -26,21 +27,13 @@ public class BlueTelop extends OpMode {
     private int dumpCount = 0;
 
     private final ElapsedTime launchTimer = new ElapsedTime();
-    private final ElapsedTime doorTimer = new ElapsedTime();
 
     // Homing state variables
     private enum HomingState { HOMING, COMPLETE }
     private HomingState homingState = HomingState.HOMING;
     private Follower follower;
+    private ManualShootManager manualShootManager;
 
-    // Add this enum to your class member variables
-    private enum ShootState {
-        IDLE,        // Waiting for input
-        OPENING_DOOR,  // The door is opening
-        CLOSING_DOOR,  // The door is closing
-        INDEXING// Advancing the spindexer
-    }
-    private ShootState shootState = ShootState.IDLE;
 
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
@@ -57,6 +50,8 @@ public class BlueTelop extends OpMode {
         follower = Constants.createFollower(hardwareMap);
         Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
         follower.setPose(startingPose);
+
+        manualShootManager = new ManualShootManager(robot.door, robot.spindexer);
 
         // Initialize all your other robot hardware here
         // example: leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -98,7 +93,6 @@ public class BlueTelop extends OpMode {
     @Override
     public void start() {
         // You could reset timers here if needed, but it's often empty for TeleOp.
-        robot.spindexer.setPower(0.9);
 
     }
 
@@ -116,7 +110,8 @@ public class BlueTelop extends OpMode {
 
         // --- Driver 2: Mechanisms ---
         handleDumpMode();
-        handleManualShoot(); // <-- NEW: This replaces the old code
+
+        manualShootManager.update(gamepad2.y, dumpMode);
 
         // Run the main robot update loop
         robot.update();
@@ -186,50 +181,6 @@ public class BlueTelop extends OpMode {
         }
     }
 
-    // Add this new helper method to your BlueTelop class
-    private void handleManualShoot() {
-        switch (shootState) {
-            case IDLE:
-                // If the Y button is pressed and we're not busy with another sequence...
-                if (gamepad2.y && !dumpMode) {
-                    // 1. Open the door
-                    robot.door.forceOpenLock();
-                    doorTimer.reset();
-                    // 2. Move to the next state
-                    shootState = ShootState.OPENING_DOOR;
-                }
-                break;
-
-            case OPENING_DOOR:
-                // Wait for a short time (e.g., 250ms) for the servo to move
-                if (doorTimer.milliseconds() > 250) {
-                    // 1. Close the door
-                    robot.door.forceClose();
-                    doorTimer.reset();
-                    // 2. Move to the next state
-                    shootState = ShootState.CLOSING_DOOR;
-                }
-                break;
-
-            case CLOSING_DOOR:
-                // Wait again for the servo to close
-                if (doorTimer.milliseconds() > 250) {
-                    // 1. Advance the spindexer to the next compartment
-                    robot.spindexer.nextCompartment();
-                    // 2. Return to IDLE, ready for the next button press
-                    shootState = ShootState.IDLE;
-                }
-                break;
-
-            // This case is not used in the sequence but good to have
-            case INDEXING:
-                // This state could be used if indexing took time, but nextCompartment() is instant.
-                // We can go directly back to IDLE.
-                shootState = ShootState.IDLE;
-                break;
-        }
-    }
-
     private void updateTelemetry() {
         // Display the robot's current position on the telemetry
         Pose currentPose = follower.getPose();
@@ -242,6 +193,7 @@ public class BlueTelop extends OpMode {
         telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
         telemetry.addData("Detected Color", colorSensor.getBallColor());
         telemetry.addData("Ball Present", colorSensor.isBallPresent());
+        telemetry.addData("Shoot State", manualShootManager.getState()); // <-- Optional: new telemetry
         telemetry.update();
     }
 }

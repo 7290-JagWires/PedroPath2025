@@ -6,6 +6,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
 
 import com.qualcomm.robotcore.util.ElapsedTime;
 
@@ -459,6 +461,78 @@ public class Utilities {
          */
         public boolean isFinished() {
             return rotateState == RotateState.FINISHED;
+        }
+    }
+
+    public static class ManualShootManager {
+
+        // 1. Move the enum for state tracking inside the manager
+        public enum ShootState {
+            IDLE,        // Waiting for input
+            OPENING_DOOR,  // The door is opening
+            CLOSING_DOOR   // The door is closing
+        }
+        private ShootState shootState = ShootState.IDLE;
+
+        // 2. Move hardware dependencies here
+        private final Door door;
+        private final Spindexer spindexer;
+
+        // 3. Move the timer here
+        private final ElapsedTime doorTimer = new ElapsedTime();
+        private static final int SERVO_MOVE_TIME_MS = 250;
+
+        // 4. Constructor to get the required hardware components
+        public ManualShootManager(Door door, Spindexer spindexer) {
+            this.door = door;
+            this.spindexer = spindexer;
+        }
+
+        /**
+         * The main update loop for the manual shoot state machine.
+         * Call this in every loop of your OpMode.
+         * @param shootButtonPressed Whether the shoot button is currently pressed.
+         * @param isDumpModeActive   Whether another action (like auto-dump) is happening.
+         */
+        public void update(boolean shootButtonPressed, boolean isDumpModeActive) {
+            switch (shootState) {
+                case IDLE:
+                    // If the Y button is pressed and we're not busy with another sequence...
+                    if (shootButtonPressed && !isDumpModeActive) {
+                        // 1. Open the door
+                        door.forceOpenLock();
+                        doorTimer.reset();
+                        // 2. Move to the next state
+                        shootState = ShootState.OPENING_DOOR;
+                    }
+                    break;
+
+                case OPENING_DOOR:
+                    // Wait for a short time for the servo to move
+                    if (doorTimer.milliseconds() > SERVO_MOVE_TIME_MS) {
+                        // 1. Close the door
+                        door.forceClose();
+                        doorTimer.reset();
+                        // 2. Move to the next state
+                        shootState = ShootState.CLOSING_DOOR;
+                    }
+                    break;
+
+                case CLOSING_DOOR:
+                    // Wait again for the servo to close
+                    if (doorTimer.milliseconds() > SERVO_MOVE_TIME_MS) {
+                        // 1. Advance the spindexer to the next compartment
+                        spindexer.nextCompartment();
+                        // 2. Return to IDLE, ready for the next button press
+                        shootState = ShootState.IDLE;
+                    }
+                    break;
+            }
+        }
+
+        // Optional: A getter to see the current state for telemetry
+        public ShootState getState() {
+            return shootState;
         }
     }
 }
