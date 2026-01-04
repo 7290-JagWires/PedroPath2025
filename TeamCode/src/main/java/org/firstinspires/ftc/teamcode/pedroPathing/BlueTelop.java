@@ -54,16 +54,16 @@ public class BlueTelop extends OpMode {
         colorSensor = new ColorSensor(hardwareMap, "color_sensor");
         indicator = new IndicatorLight(hardwareMap, "rgbServo");
 
-        follower = Constants.createFollower(hardwareMap);
-        Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
-        follower.setPose(startingPose);
+//        follower = Constants.createFollower(hardwareMap);
+//        Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
+//        follower.setPose(startingPose);
 
         // Initialize all your other robot hardware here
         // example: leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
 
         telemetry.addLine("TeleOp Initialized");
-        telemetry.addData("Pose Loaded From Auto", "X: %.2f, Y: %.2f, H: %.2f",
-                startingPose.getX(), startingPose.getY(), startingPose.getHeading());
+//        telemetry.addData("Pose Loaded From Auto", "X: %.2f, Y: %.2f, H: %.2f",
+//                startingPose.getX(), startingPose.getY(), startingPose.getHeading());
 
         telemetry.addLine("Initialization Complete. Ready for Homing.");
         telemetry.update();
