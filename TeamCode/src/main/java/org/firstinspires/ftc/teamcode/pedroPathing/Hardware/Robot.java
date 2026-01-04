@@ -13,9 +13,13 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.PinpointLocalizer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
+import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.SpindexerRotator;
 
 public class Robot {
     public final OpMode opMode;
@@ -32,6 +36,11 @@ public class Robot {
 
     // Spindexer
     public final Spindexer spindexer;
+    public final SpindexerMotor spindexerMotor;
+    public final SpindexerIndexerLogic spindexerLogic;
+    public final Utilities.DumpManager dumpManager;
+    public final Utilities.SpindexerRotator spindexerRotator;
+
     public final MagneticLimitSwitch spindexerMag;
     private static final int TICKS_PER_COMPARTMENT = 1354;//I would leave this in case we need to go back to encoder counting for compartments - AH
 
@@ -48,6 +57,10 @@ public class Robot {
         pinpoint = new PinpointLocalizer(opMode.hardwareMap);
         colorSensor = new ColorSensor(opMode.hardwareMap, "color_sensor");
         indicator = new IndicatorLight(opMode.hardwareMap, "rgbServo");
+        spindexerMotor = new SpindexerMotor(hardwareMap);
+        spindexerLogic = new SpindexerIndexerLogic(opMode, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
+        spindexerRotator = new SpindexerRotator(spindexerLogic);
+        dumpManager = new DumpManager(shooter, door, spindexerLogic,spindexerRotator);
     }
 
     public void update() {
@@ -55,7 +68,8 @@ public class Robot {
         spindexer.update();
         intakeActive.run();
         shooter.run();
-        door.run();
+        dumpManager.update();
+        spindexerRotator.update();
     }
 
     public void stopAll() {

@@ -58,9 +58,7 @@ public class Door {
         else closeDoor();
     }
 
-    public void run() {
-        boolean y = myOpMode.gamepad2.y;
-
+    public void run(boolean y) {
         if (y && !prevY && !lockedOpen) {
             toggleDoor();
         }

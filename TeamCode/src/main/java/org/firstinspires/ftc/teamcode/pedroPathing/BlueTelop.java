@@ -26,11 +26,21 @@ public class BlueTelop extends OpMode {
     private int dumpCount = 0;
 
     private final ElapsedTime launchTimer = new ElapsedTime();
+    private final ElapsedTime doorTimer = new ElapsedTime();
 
     // Homing state variables
     private enum HomingState { HOMING, COMPLETE }
     private HomingState homingState = HomingState.HOMING;
     private Follower follower;
+
+    // Add this enum to your class member variables
+    private enum ShootState {
+        IDLE,        // Waiting for input
+        OPENING_DOOR,  // The door is opening
+        CLOSING_DOOR,  // The door is closing
+        INDEXING// Advancing the spindexer
+    }
+    private ShootState shootState = ShootState.IDLE;
 
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
@@ -88,6 +98,8 @@ public class BlueTelop extends OpMode {
     @Override
     public void start() {
         // You could reset timers here if needed, but it's often empty for TeleOp.
+        robot.spindexer.setPower(0.9);
+
     }
 
     /**
@@ -104,7 +116,7 @@ public class BlueTelop extends OpMode {
 
         // --- Driver 2: Mechanisms ---
         handleDumpMode();
-        handleSpindexerControls();
+        handleManualShoot(); // <-- NEW: This replaces the old code
 
         // Run the main robot update loop
         robot.update();
@@ -187,15 +199,47 @@ public class BlueTelop extends OpMode {
         }
     }
 
-    private void handleSpindexerControls() {
-        // Manual spindexer controls (only if NOT in dump mode)
-        if (!dumpMode) {
-            if (gamepad2.a) {
-                robot.spindexer.nextCompartment();
-            }
-            if (gamepad2.b) {
-                robot.spindexer.previousCompartment();
-            }
+    // Add this new helper method to your BlueTelop class
+    private void handleManualShoot() {
+        switch (shootState) {
+            case IDLE:
+                // If the Y button is pressed and we're not busy with another sequence...
+                if (gamepad2.y && !dumpMode) {
+                    // 1. Open the door
+                    robot.door.forceOpenLock();
+                    doorTimer.reset();
+                    // 2. Move to the next state
+                    shootState = ShootState.OPENING_DOOR;
+                }
+                break;
+
+            case OPENING_DOOR:
+                // Wait for a short time (e.g., 250ms) for the servo to move
+                if (doorTimer.milliseconds() > 250) {
+                    // 1. Close the door
+                    robot.door.forceClose();
+                    doorTimer.reset();
+                    // 2. Move to the next state
+                    shootState = ShootState.CLOSING_DOOR;
+                }
+                break;
+
+            case CLOSING_DOOR:
+                // Wait again for the servo to close
+                if (doorTimer.milliseconds() > 250) {
+                    // 1. Advance the spindexer to the next compartment
+                    robot.spindexer.nextCompartment();
+                    // 2. Return to IDLE, ready for the next button press
+                    shootState = ShootState.IDLE;
+                }
+                break;
+
+            // This case is not used in the sequence but good to have
+            case INDEXING:
+                // This state could be used if indexing took time, but nextCompartment() is instant.
+                // We can go directly back to IDLE.
+                shootState = ShootState.IDLE;
+                break;
         }
     }
 
