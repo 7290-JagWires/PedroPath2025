@@ -245,9 +245,9 @@ public class BlueTelop extends OpMode {
 
     private void updateTelemetry() {
         // Display the robot's current position on the telemetry
-        Pose currentPose = follower.getPose();
-        telemetry.addData("Current Pose", "X: %.2f, Y: %.2f, H: %.2f",
-                currentPose.getX(), currentPose.getY(), currentPose.getHeading());
+//        Pose currentPose = follower.getPose();
+//        telemetry.addData("Current Pose", "X: %.2f, Y: %.2f, H: %.2f",
+//                currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         telemetry.addData("Dump Mode", dumpMode);
         telemetry.addData("Intake Comp", robot.spindexer.getIntakeCompartment());
         telemetry.addData("Shooter Comp", robot.spindexer.getShooterCompartment());
