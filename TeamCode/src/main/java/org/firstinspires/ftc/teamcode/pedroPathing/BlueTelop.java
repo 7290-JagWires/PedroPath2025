@@ -105,6 +105,8 @@ public class BlueTelop extends OpMode {
         // --- Sensor Updates ---
         Utilities.isBall(colorSensor, indicator);
 
+        manualShootManager.update(gamepad2.yWasPressed(), dumpManager.isDumping());
+
         // --- Driver 1: Drivetrain ---
         Utilities.handleRobotCentricDrive(gamepad1, robot);
 

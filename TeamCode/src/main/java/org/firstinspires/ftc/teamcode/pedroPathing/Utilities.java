@@ -52,14 +52,26 @@ public class Utilities {
      * @param gamepad The gamepad to read joystick inputs from (typically gamepad1).
      * @param robot   The main Robot object that contains the mecanumDrive system.
      */
-    public static void handleRobotCentricDrive(Gamepad gamepad, Robot robot) {
-        // Read joystick values
-        double y = -gamepad.left_stick_y;  // Forward/Backward. Negated for standard orientation.
-        double x =  gamepad.left_stick_x;  // Strafe Left/Right.
-        double r =  gamepad.right_stick_x; // Rotate Left/Right.
+// Inside a new or existing Utilities.java file
 
-        // Send power commands to the drive system
-        robot.mecanumDrive.drive(x, y, r);
+    public static void handleRobotCentricDrive(Gamepad gamepad, Robot robot) {
+        double y = -gamepad.left_stick_y;
+        double x = gamepad.left_stick_x;
+        double r = gamepad.right_stick_x;
+
+        // Create a deadzone to prevent joystick drift
+        double deadzone = 0.05; // 5% deadzone, adjust as needed
+
+        if (Math.abs(y) < deadzone) y = 0;
+        if (Math.abs(x) < deadzone) x = 0;
+        if (Math.abs(r) < deadzone) r = 0;
+
+        // Only apply power if there is significant input
+        if (y != 0 || x != 0 || r != 0) {
+            robot.mecanumDrive.drive(x, y, r);
+        } else {
+            robot.mecanumDrive.stop();
+        }
     }
     public static class PickupManager {
         // Enums for state tracking
