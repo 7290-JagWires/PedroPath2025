@@ -1,18 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.Hardware;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.MecanumDrive;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.DriveTrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.PinpointLocalizer;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;

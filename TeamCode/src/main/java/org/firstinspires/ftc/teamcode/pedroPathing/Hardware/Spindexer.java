@@ -11,8 +11,6 @@ public class Spindexer {
     // constants
 
     public static final int COMPARTMENTS = 3;
-    private static final double INDEX_POWER = 0.50;
-
 
     // 0 = Comp1, 1 = Comp2, 2 = Comp3
     private int compartmentIndex = 0;

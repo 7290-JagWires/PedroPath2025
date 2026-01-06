@@ -4,7 +4,6 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
@@ -13,26 +12,16 @@ import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 
-import kotlin.time.Instant;
-
 @TeleOp()
 public class BlueTelop extends OpMode {
-
-    private static final int LAUNCH_DELAY_MILLISECONDS = 1000;
 
     protected DumpManager dumpManager;
     // Class member variables
     private Robot robot;
     private ColorSensor colorSensor;
     private IndicatorLight indicator;
-
-
-    // Homing state variables
-    private enum HomingState { HOMING, COMPLETE }
-    private HomingState homingState = HomingState.HOMING;
     private Follower follower;
     private ManualShootManager manualShootManager;
-
 
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
