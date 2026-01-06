@@ -3,18 +3,23 @@ package org.firstinspires.ftc.teamcode.pedroPathing.Logic;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.SpindexerMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
 
 public class SpindexerIndexerLogic {
 
     private final OpMode opMode;
     private final SpindexerMotor motor;
     private final MagneticLimitSwitch limit;
+    // In SpindexerIndexerLogic.java
+    public enum IndexerState { IDLE, MOVING, REHOMING, FINISHED }
 
     // This is the only state variable we need to track.
     private int currentTargetCompartment = 0;
     private int cumulativeTargetTicks = 0; // Tracks the absolute target position
     // Lets TeleOp know a move happened (used for auto-close door)
     public boolean justIndexed = false;
+
+    private IndexerState indexerState = IndexerState.IDLE;
 
     public SpindexerIndexerLogic(OpMode opMode,
                                  SpindexerMotor motor,
@@ -46,18 +51,24 @@ public class SpindexerIndexerLogic {
      -
 
      */
+    // In SpindexerIndexerLogic.java
     public void nextCompartment() {
-        // Increment which logical compartment we are targeting.
-        currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
-
-        // Increment the ABSOLUTE target position by one compartment's worth of ticks.
-        cumulativeTargetTicks += SpindexerMotor.TICKS_PER_COMPARTMENT;
-
-        // Tell the motor to go to the new, always-increasing target.
-        motor.setTargetTicks(cumulativeTargetTicks, 1); // Using 100% power
-
-        // Signal that an indexing action has started.
-        justIndexed = true;
+        if (indexerState == IndexerState.IDLE || indexerState == IndexerState.FINISHED) {
+            // Check if the NEXT compartment is the zero position.
+            if ((currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS == 0) {
+                // --- THIS IS A RE-HOMING ROTATION ---
+                // Instead of using encoders, we'll spin with raw power and look for the magnet.
+                motor.setPower(1.0); // Use a method that sets RUN_USING_ENCODER
+                indexerState = IndexerState.REHOMING;
+            } else {
+                // --- THIS IS A NORMAL ENCODER ROTATION ---
+                currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
+                cumulativeTargetTicks += SpindexerMotor.TICKS_PER_COMPARTMENT;
+                motor.setTargetTicks(cumulativeTargetTicks, 1.0);
+                indexerState = IndexerState.MOVING;
+            }
+            justIndexed = true;
+        }
     }
     /**
      * Checks if the homing magnet is detected and resets the encoder to zero.
@@ -74,14 +85,37 @@ public class SpindexerIndexerLogic {
         currentTargetCompartment = 0;
         cumulativeTargetTicks = 0;
     }
-
     /**
      * Main update loop for this logic class. Call this from your Robot's update() method.
      */
+    // In SpindexerIndexerLogic.java
     public void update() {
         limit.update();
-        // You could optionally re-home if the magnet is seen, but this can be dangerous during a match.
-        // updateMagnetZero();
+
+        switch (indexerState) {
+            case MOVING:
+                // For normal encoder moves, we just wait for the motor to be done.
+                if (!motor.isBusy()) {
+                    indexerState = IndexerState.FINISHED;
+                }
+                break;
+
+            case REHOMING:
+                // For re-homing moves, we wait for the rising edge of the magnet.
+                if (limit.wasJustTriggered()) {
+                    motor.stop();         // Stop the motor immediately.
+                    motor.resetEncoder(); // Reset the physical encoder to 0.
+                    resetPosition();      // Reset all our software counters (cumulative ticks, etc.).
+                    // We are now at a perfect, drift-free zero.
+                    indexerState = IndexerState.FINISHED;
+                }
+                break;
+
+            // IDLE and FINISHED do nothing.
+            case IDLE:
+            case FINISHED:
+                break;
+        }
     }
 
     public int getIntakeCompartment() { return currentTargetCompartment + 1; }
