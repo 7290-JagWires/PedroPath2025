@@ -70,6 +70,10 @@ public class SpindexerIndexerLogic {
             currentTargetCompartment = 0;
         }
     }
+    public void resetPosition() {
+        currentTargetCompartment = 0;
+        cumulativeTargetTicks = 0;
+    }
 
     /**
      * Main update loop for this logic class. Call this from your Robot's update() method.

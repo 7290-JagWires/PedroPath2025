@@ -1,12 +1,15 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.Hardware;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 
 public class Spindexer {
 
     private final SpindexerMotor motor;
     private final MagneticLimitSwitch limit;
+    private final SpindexerIndexerLogic spindexerLogic; // Assuming you have a reference to it
 
     // constants
 
@@ -38,6 +41,9 @@ public class Spindexer {
         motor = new SpindexerMotor(opMode.hardwareMap); // <-- Use the new class
 
         limit = new MagneticLimitSwitch(opMode.hardwareMap, "magnetic_limit_sensor");
+
+        spindexerLogic = new SpindexerIndexerLogic(opMode, motor, limit, COMPARTMENTS);
+
         // ... rest of constructor
     }
 
@@ -114,6 +120,10 @@ public class Spindexer {
                     // 1. Tell the SpindexerMotor to reset its internal encoder count to 0.
                     //    This also re-enables RUN_TO_POSITION mode to hold the new zero.
                     motor.resetEncoder();
+
+                    if (spindexerLogic != null) {
+                        spindexerLogic.resetPosition();
+                    }
 
                     // 2. Set the state to complete.
                     homingState = HomingState.COMPLETE;
