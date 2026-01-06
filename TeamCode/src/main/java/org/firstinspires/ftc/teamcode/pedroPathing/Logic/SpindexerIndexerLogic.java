@@ -12,7 +12,7 @@ public class SpindexerIndexerLogic {
 
     // This is the only state variable we need to track.
     private int currentTargetCompartment = 0;
-
+    private int cumulativeTargetTicks = 0; // Tracks the absolute target position
     // Lets TeleOp know a move happened (used for auto-close door)
     public boolean justIndexed = false;
 
@@ -30,24 +30,35 @@ public class SpindexerIndexerLogic {
     }
 
     /**
-     * This is the NEW, REWRITTEN nextCompartment method.
-     * It calculates the next target position and tells the motor to go there.
+     How this should work
+     - CurrentTargetCompartment starts at 0.
+     - We add 1 to it, making it 1.
+     - The modulo operator (%) calculates the remainder of a division. Since COMPARTMENTS is 3, we get: 1 % 3 equals 1.
+     - The result is stored back into currentTargetCompartment.
+     - Outcome: currentTargetCompartment is now 1. This line of code handles the "wrap-around" logic automatically.
+                When currentTargetCompartment is 2, the calculation becomes (2 + 1) % 3, which is 3 % 3,
+                and the remainder is 0. So the sequence will always be 0 -> 1 -> 2 -> 0 -> ....
+     - Now that we know which compartment we want (1), we need to translate that into a physical position for the motor.
+     - The SpindexerMotor class defines TICKS_PER_COMPARTMENT (which is 4063 / 3, or approximately 1354).
+     - The calculation becomes: targetTicks = 1 * 1354•Outcome: The variable targetTicks is now 1354.
+       The motor needs to spin until its encoder reads this value.
+     - We set the power to 100% and move to the target.
+     -
+
      */
     public void nextCompartment() {
-        // 1. Increment the target compartment, wrapping around from 2 back to 0.
+        // Increment which logical compartment we are targeting.
         currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
 
-        // 2. Calculate the target encoder ticks for that compartment.
-        int targetTicks = currentTargetCompartment * SpindexerMotor.TICKS_PER_COMPARTMENT;
+        // Increment the ABSOLUTE target position by one compartment's worth of ticks.
+        cumulativeTargetTicks += SpindexerMotor.TICKS_PER_COMPARTMENT;
 
-        // 3. Tell the motor to go to the new position with a specific power.
-        // The motor's RUN_TO_POSITION mode will handle the movement and stopping.
-        motor.setTargetTicks(targetTicks, 1); // Using 100% power
+        // Tell the motor to go to the new, always-increasing target.
+        motor.setTargetTicks(cumulativeTargetTicks, 1); // Using 100% power
 
-        // 4. Signal that an indexing action has started.
+        // Signal that an indexing action has started.
         justIndexed = true;
     }
-
     /**
      * Checks if the homing magnet is detected and resets the encoder to zero.
      * This is useful for re-calibrating the spindexer's position.
