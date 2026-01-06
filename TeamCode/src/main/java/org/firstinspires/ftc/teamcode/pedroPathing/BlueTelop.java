@@ -6,22 +6,14 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
-import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
-import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
-import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 
 @TeleOp()
 public class BlueTelop extends OpMode {
 
-    protected DumpManager dumpManager;
-    // Class member variables
+   // Class member variables
     private Robot robot;
-    private ColorSensor colorSensor;
-    private IndicatorLight indicator;
     private Follower follower;
-    private ManualShootManager manualShootManager;
 
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
@@ -32,15 +24,10 @@ public class BlueTelop extends OpMode {
         telemetry.addLine("Initializing...");
 
         robot = new Robot(this);
-        colorSensor = new ColorSensor(hardwareMap, "color_sensor");
-        indicator = new IndicatorLight(hardwareMap, "rgbServo");
-        dumpManager = new DumpManager(this,robot.shooter, robot.door, robot.spindexerLogic,robot.spindexerRotator);
 
         follower = Constants.createFollower(hardwareMap);
         Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
         follower.setPose(startingPose);
-
-        manualShootManager = new ManualShootManager(robot.door, robot.spindexerLogic);
 
         // Initialize all your other robot hardware here
         // example: leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -93,14 +80,14 @@ public class BlueTelop extends OpMode {
     @Override
     public void loop() {
         // --- Sensor Updates ---
-        Utilities.isBall(colorSensor, indicator);
+        Utilities.isBall(robot.colorSensor, robot.indicator);
 
         // --- Driver 1: Drivetrain ---
         Utilities.handleRobotCentricDrive(gamepad1, robot);
 
         // --- Driver 2: Controller ---
-        manualShootManager.update(gamepad2.yWasPressed(), dumpManager.isDumping());
-        dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
+        robot.manualShootManager.update(gamepad2.yWasPressed(), robot.dumpManager.isDumping());
+        robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
 
         // Run the main robot update loop
         robot.update();
@@ -136,15 +123,15 @@ public class BlueTelop extends OpMode {
         Pose currentPose = follower.getPose();
         telemetry.addData("Current Pose", "X: %.2f, Y: %.2f, H: %.2f",
                 currentPose.getX(), currentPose.getY(), currentPose.getHeading());
-        telemetry.addData("Dump Mode Active", dumpManager.isDumping());
-        telemetry.addData("Dump State", dumpManager.getState());
+        telemetry.addData("Dump Mode Active", robot.dumpManager.isDumping());
+        telemetry.addData("Dump State", robot.dumpManager.getState());
         telemetry.addData("Intake Comp", robot.spindexer.getIntakeCompartment());
         telemetry.addData("Shooter Comp", robot.spindexer.getShooterCompartment());
         telemetry.addData("Next Up", robot.spindexer.getNextUpCompartment());
         telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
-        telemetry.addData("Detected Color", colorSensor.getBallColor());
-        telemetry.addData("Ball Present", colorSensor.isBallPresent());
-        telemetry.addData("Shoot State", manualShootManager.getState()); // <-- Optional: new telemetry
+        telemetry.addData("Detected Color", robot.colorSensor.getBallColor());
+        telemetry.addData("Ball Present", robot.colorSensor.isBallPresent());
+        telemetry.addData("Shoot State", robot.manualShootManager.getState()); // <-- Optional: new telemetry
         telemetry.update();
     }
 }
