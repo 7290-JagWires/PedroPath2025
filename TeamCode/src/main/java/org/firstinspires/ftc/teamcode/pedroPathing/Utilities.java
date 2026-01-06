@@ -336,28 +336,27 @@ public class Utilities {
          * </ul>
          */
         public void update() {
+            // Always keep the rotator updated
+            spindexerRotator.update();
+
             switch (dumpState) {
                 case IDLE:
                     break;
                 case SPIN_UP:
                     if (isTeleOpDumping) {
+                        spindexerRotator.start(TOTAL_BALLS_TO_DUMP);
                         dumpState = DumpState.DUMPING;
                     } else if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
+                        spindexerRotator.start(TOTAL_BALLS_TO_DUMP);
                         launchTimer.reset();
                         dumpState = DumpState.DUMPING;
                     }
                     break;
                 case DUMPING:
                     door.forceOpenLock();
-                    if (launchTimer.milliseconds() > LAUNCH_DELAY_MS) {
-                        spindexerLogic.nextCompartment();
-                    }
-                    if (!spindexerLogic.isBusy()) {
-                        dumpCount++;
-                        launchTimer.reset();
-                        if (dumpCount >= TOTAL_BALLS_TO_DUMP) {
-                            dumpState = DumpState.FINISHED;
-                        }
+                    // Wait for the SpindexerRotator to confirm it has finished all 3 rotations
+                    if (spindexerRotator.isFinished()) {
+                        dumpState = DumpState.FINISHED;
                     }
                     break;
                 case FINISHED:
