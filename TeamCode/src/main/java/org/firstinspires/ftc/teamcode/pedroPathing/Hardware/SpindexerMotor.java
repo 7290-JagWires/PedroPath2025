@@ -10,7 +10,7 @@ public class SpindexerMotor {
     private final DcMotorEx motor;
 
     // constants
-    public static final int TICKS_PER_REV = 4063;
+    public static final int TICKS_PER_REV = 4063;  //1354 ticks per compartment
     public static final int COMPARTMENTS = 3;
     public static final int TICKS_PER_COMPARTMENT = TICKS_PER_REV / COMPARTMENTS;
 

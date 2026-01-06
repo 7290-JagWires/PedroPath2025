@@ -87,7 +87,7 @@ public abstract class BaseAutonomous extends OpMode {
         spindexerLogic = new SpindexerIndexerLogic(this, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
 
-        dumpManager = new DumpManager(shooter, door, spindexerLogic,spindexerRotator);
+        dumpManager = new DumpManager(this, shooter, door, spindexerLogic,spindexerRotator);
         pickupManager = new PickupManager(door, shooter, intakeActive, spindexerLogic, colorSensor, indicator);
         limelight.setPipeline(0); // Make sure it's on your AprilTag pipeline
         limelight.start();

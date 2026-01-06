@@ -8,6 +8,10 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
+
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 
@@ -55,9 +59,9 @@ public class Utilities {
 // Inside a new or existing Utilities.java file
 
     public static void handleRobotCentricDrive(Gamepad gamepad, Robot robot) {
-        double y = -gamepad.left_stick_y;
-        double x = gamepad.left_stick_x;
-        double r = gamepad.right_stick_x;
+        double y = gamepad.left_stick_y;
+        double x = -gamepad.left_stick_x;
+        double r = -gamepad.right_stick_x;
 
         // Create a deadzone to prevent joystick drift
         double deadzone = 0.05; // 5% deadzone, adjust as needed
@@ -268,10 +272,10 @@ public class Utilities {
         private final Door door;
         private final SpindexerIndexerLogic spindexerLogic;
         private final SpindexerRotator spindexerRotator; // <-- ADD THIS LINE
-
+        private final OpMode opMode;
         // Constants
         private static final int SHOOTER_SPINUP_MS = 2000;
-        private static final int LAUNCH_DELAY_MS = 500;
+        private static final int LAUNCH_DELAY_MS = 400;
         private static final int TOTAL_BALLS_TO_DUMP = 3;
 
         private boolean isTeleOpDumping = false;
@@ -287,11 +291,12 @@ public class Utilities {
          * @param door The {@link Door} object used to control the opening/closing of the ball gate.
          * @param spindexerLogic The {@link SpindexerIndexerLogic} to manage rotating the spindexer to the next ball.
          */
-        public DumpManager(Shooter shooter, Door door, SpindexerIndexerLogic spindexerLogic,SpindexerRotator spindexerRotator) {
+        public DumpManager(OpMode opMode,Shooter shooter, Door door, SpindexerIndexerLogic spindexerLogic, SpindexerRotator spindexerRotator) {
             this.shooter = shooter;
             this.door = door;
             this.spindexerLogic = spindexerLogic;
             this.spindexerRotator = spindexerRotator;
+            this.opMode = opMode;
         }
 
 
@@ -336,7 +341,9 @@ public class Utilities {
                 case IDLE:
                     break;
                 case SPIN_UP:
-                    if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
+                    if (isTeleOpDumping) {
+                        dumpState = DumpState.DUMPING;
+                    } else if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
                         launchTimer.reset();
                         dumpState = DumpState.DUMPING;
                     }
@@ -554,7 +561,7 @@ public class Utilities {
 
         // 3. Move the timer here
         private final ElapsedTime doorTimer = new ElapsedTime();
-        private static final int SERVO_MOVE_TIME_MS = 250;
+        private static final int SERVO_MOVE_TIME_MS = 300;
 
         // 4. Constructor to get the required hardware components
         public ManualShootManager(Door door, Spindexer spindexer) {

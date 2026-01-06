@@ -60,7 +60,7 @@ public class Robot {
         spindexerMotor = new SpindexerMotor(opMode.hardwareMap);
         spindexerLogic = new SpindexerIndexerLogic(opMode, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
-        dumpManager = new DumpManager(shooter, door, spindexerLogic,spindexerRotator);
+        dumpManager = new DumpManager(opMode, shooter, door, spindexerLogic,spindexerRotator);
     }
 
     public void update() {

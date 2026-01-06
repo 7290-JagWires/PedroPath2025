@@ -45,7 +45,7 @@ public class BlueTelop extends OpMode {
         robot = new Robot(this);
         colorSensor = new ColorSensor(hardwareMap, "color_sensor");
         indicator = new IndicatorLight(hardwareMap, "rgbServo");
-        dumpManager = new DumpManager(robot.shooter, robot.door, robot.spindexerLogic,robot.spindexerRotator);
+        dumpManager = new DumpManager(this,robot.shooter, robot.door, robot.spindexerLogic,robot.spindexerRotator);
 
         follower = Constants.createFollower(hardwareMap);
         Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
