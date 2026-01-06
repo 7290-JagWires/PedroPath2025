@@ -314,6 +314,11 @@ public class Utilities {
             }
         }
 
+        public void stop() {
+            dumpState = DumpState.IDLE; // **THIS IS THE CRITICAL FIX**
+        }
+
+
         /**
          * Updates the state machine for the pickup process. This method should be called repeatedly in a loop.
          * It manages the transitions between different states of the pickup cycle.
@@ -361,6 +366,7 @@ public class Utilities {
                     break;
                 case FINISHED:
                     // Actions to take once all balls are dumped
+                    stop();
                     break;
             }
         }
@@ -574,6 +580,9 @@ public class Utilities {
          * @param isDumpModeActive   Whether another action (like auto-dump) is happening.
          */
         public void update(boolean shootButtonPressed, boolean isDumpModeActive) {
+            // Always update the spindexer's internal logic for its own state machine.
+            spindexerLogic.update();
+
             switch (shootState) {
                 case IDLE:
                     // If the button is pressed and we're not busy with another sequence...
@@ -609,7 +618,13 @@ public class Utilities {
             }
         }
 
-        // Optional: A getter to see the current state for telemetry
+        /**
+         * Checks if the manager is currently busy with a shooting sequence.
+         */
+        public boolean isShooting() {
+            return shootState != ShootState.IDLE;
+        }
+
         public ShootState getState() {
             return shootState;
         }

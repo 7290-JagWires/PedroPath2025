@@ -95,13 +95,11 @@ public class BlueTelop extends OpMode {
         // --- Sensor Updates ---
         Utilities.isBall(colorSensor, indicator);
 
-        manualShootManager.update(gamepad2.yWasPressed(), dumpManager.isDumping());
-
         // --- Driver 1: Drivetrain ---
         Utilities.handleRobotCentricDrive(gamepad1, robot);
 
-        // --- Driver 2: Mechanisms ---
-        // The manager Instant.Companion.now handles the toggle logic and the entire state machine.
+        // --- Driver 2: Controller ---
+        manualShootManager.update(gamepad2.yWasPressed(), dumpManager.isDumping());
         dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
 
         // Run the main robot update loop
