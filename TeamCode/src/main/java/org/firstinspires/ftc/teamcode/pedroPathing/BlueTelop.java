@@ -51,7 +51,7 @@ public class BlueTelop extends OpMode {
         Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
         follower.setPose(startingPose);
 
-        manualShootManager = new ManualShootManager(robot.door, robot.spindexer);
+        manualShootManager = new ManualShootManager(robot.door, robot.spindexerLogic);
 
         // Initialize all your other robot hardware here
         // example: leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -70,21 +70,22 @@ public class BlueTelop extends OpMode {
      */
     @Override
     public void init_loop() {
-        if (homingState == HomingState.HOMING) {
+        if (!robot.spindexer.isHomed()) {
             telemetry.addLine("Homing Spindexer...");
 
-            robot.spindexer.setModeRunUsingEncoder();
-            robot.spindexer.setPower(0.5);
+            // Tell the spindexer to start the homing process if it hasn't already.
+            robot.spindexer.startHoming();
 
-            // Check if the magnet is triggered
-            if (robot.spindexerMag.isTriggered()) {
-                robot.spindexer.stop();
-                homingState = HomingState.COMPLETE;
-                telemetry.addLine("Homing Complete. Ready to Start.");
-            }
+            // Run the homing state machine.
+            robot.spindexer.home();
+
+        } else {
+            telemetry.addLine("Homing Complete. Ready to Start.");
         }
-        telemetry.update();
-    }
+
+        // Display the internal state for debugging.
+        telemetry.addData("Spindexer Homing State", robot.spindexer.getHomingState());
+        telemetry.update();    }
 
     /**
      * This method runs ONCE when the driver hits "PLAY".

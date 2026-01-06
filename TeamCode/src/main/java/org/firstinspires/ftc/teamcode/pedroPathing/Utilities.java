@@ -173,7 +173,7 @@ public class Utilities {
                             pickupCount++;
                             totalBallCount++;
                             if (totalBallCount < 3) {
-                                spindexerLogic.nextCompartmentAuto();
+                                spindexerLogic.nextCompartment();
                                 pickupState = PickupState.WAITING_FOR_SPIN;
                             } else {
                                 totalBallCount = 0;
@@ -183,8 +183,7 @@ public class Utilities {
                     }
                     break;
                 case WAITING_FOR_SPIN:
-//                    if (spindexerLogic.spindexerLimitSwitchCheckPickup()) {
-                        if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                        if (!spindexerLogic.isBusy()) {
                             pickupTimer.reset();
                             if (pickupCount == 1) {
                                 pickupState = PickupState.FINISHED;
@@ -353,7 +352,7 @@ public class Utilities {
                     if (launchTimer.milliseconds() > LAUNCH_DELAY_MS) {
                         spindexerLogic.nextCompartment();
                     }
-                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                    if (!spindexerLogic.isBusy()) {
                         dumpCount++;
                         launchTimer.reset();
                         if (dumpCount >= TOTAL_BALLS_TO_DUMP) {
@@ -502,7 +501,7 @@ public class Utilities {
 
                 case WAIT_FOR_FIRST_SPIN:
                     // Wait for the hardware to confirm the spin is complete
-                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                    if (!spindexerLogic.isBusy()) {
                         if (rotationsNeeded == 1) {
                             // If we only needed one spin, we are done.
                             rotateState = RotateState.FINISHED;
@@ -524,7 +523,7 @@ public class Utilities {
 
                 case WAIT_FOR_SECOND_SPIN:
                     // Wait for the hardware to confirm the second spin is complete
-                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                    if (!spindexerLogic.isBusy()) {
                         rotateState = RotateState.FINISHED;
                     }
                     break;
@@ -557,16 +556,16 @@ public class Utilities {
 
         // 2. Move hardware dependencies here
         private final Door door;
-        private final Spindexer spindexer;
+        private final SpindexerIndexerLogic spindexerLogic;
 
         // 3. Move the timer here
         private final ElapsedTime doorTimer = new ElapsedTime();
         private static final int SERVO_MOVE_TIME_MS = 300;
 
         // 4. Constructor to get the required hardware components
-        public ManualShootManager(Door door, Spindexer spindexer) {
+        public ManualShootManager(Door door, SpindexerIndexerLogic spindexerLogic) {
             this.door = door;
-            this.spindexer = spindexer;
+            this.spindexerLogic = spindexerLogic;
         }
 
         /**
@@ -603,7 +602,7 @@ public class Utilities {
                     // Wait again for the servo to close
                     if (doorTimer.milliseconds() > SERVO_MOVE_TIME_MS) {
                         // 1. Advance the spindexer to the next compartment
-                        spindexer.nextCompartment();
+                        spindexerLogic.nextCompartment();
                         // 2. Return to IDLE, ready for the next button press
                         shootState = ShootState.IDLE;
                     }

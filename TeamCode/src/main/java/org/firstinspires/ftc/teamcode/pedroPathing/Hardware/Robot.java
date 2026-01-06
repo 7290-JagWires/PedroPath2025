@@ -53,7 +53,7 @@ public class Robot {
         shooter      = new Shooter(opMode);
         door         = new Door(opMode);
         spindexerMag   = new MagneticLimitSwitch(opMode.hardwareMap, "magnetic_limit_sensor");
-        spindexer = new Spindexer(opMode, spindexerMag);
+        spindexer = new Spindexer(opMode);
         pinpoint = new PinpointLocalizer(opMode.hardwareMap);
         colorSensor = new ColorSensor(opMode.hardwareMap, "color_sensor");
         indicator = new IndicatorLight(opMode.hardwareMap, "rgbServo");
