@@ -14,9 +14,9 @@ public class SpindexerMotor {
     public static final int COMPARTMENTS = 3;
     public static final int TICKS_PER_COMPARTMENT = TICKS_PER_REV / COMPARTMENTS; // Approximately 1354
 
-    public static final double TUNED_P = 2.0; // A slightly higher P might give a snappier response
-    public static final double TUNED_I = 0.0;
-    public static final double TUNED_D = 0.0;  // A small D can help reduce overshoot
+    public static final double TUNED_P = 12.0; // A slightly higher P might give a snappier response
+    public static final double TUNED_I = 3.0;
+    public static final double TUNED_D = 0.5;  // A small D can help reduce overshoot
     public static final double TUNED_F = 0.0;
 
 
@@ -41,16 +41,12 @@ public class SpindexerMotor {
         pidfCoefficients.d = TUNED_D;
         pidfCoefficients.f = TUNED_F;
 
-        motor.setPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION,pidfCoefficients);
-
         // Set an initial target position of 0.
         motor.setTargetPosition(0);
 
         // IMPORTANT: Switch the motor to RUN_TO_POSITION mode.
         // It will now actively try to reach and hold the target position.
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        motor.setPower(1.0); // Ensure the motor is running.
     }
 
     /**
