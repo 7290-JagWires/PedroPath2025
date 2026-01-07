@@ -635,7 +635,8 @@ public class Utilities {
      */
     public static class ManualPickupManager {
 
-        public enum ManualPickupState { IDLE, INDEXING, WAIT_FOR_SPIN }
+        // CORRECTED: A simpler two-state machine is more robust.
+        public enum ManualPickupState { IDLE, WAIT_FOR_SPIN }
         private ManualPickupState state = ManualPickupState.IDLE;
 
         private final SpindexerIndexerLogic spindexerLogic;
@@ -661,18 +662,15 @@ public class Utilities {
                     // If the button is pressed, command the spindexer to move and change state.
                     if (pickupButtonPressed) {
                         spindexerLogic.nextCompartment();
-                        state = ManualPickupState.INDEXING;
-                    }
-                    break;
-                case INDEXING:
-                    // This is a transition state. Wait for the spindexer to START moving.
-                    // This prevents immediately skipping the WAIT_FOR_SPIN state.
-                    if (!spindexerLogic.isFinished()) {
+                        // Immediately move to the waiting state.
                         state = ManualPickupState.WAIT_FOR_SPIN;
                     }
                     break;
+                // REMOVED the faulty INDEXING state.
+
                 case WAIT_FOR_SPIN:
                     // Wait for the spindexer to report that its rotation is complete.
+                    // The spindexerLogic is now guaranteed to be "busy" until it's done.
                     if (spindexerLogic.isFinished()) {
                         state = ManualPickupState.IDLE;
                     }

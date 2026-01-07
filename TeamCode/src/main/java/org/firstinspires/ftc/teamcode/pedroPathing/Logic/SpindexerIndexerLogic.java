@@ -60,6 +60,7 @@ public class SpindexerIndexerLogic {
                 // Instead of using encoders, we'll spin with raw power and look for the magnet.
                 motor.setPower(.5); // Use a method that sets RUN_USING_ENCODER
                 indexerState = IndexerState.REHOMING;
+                opMode.telemetry.addLine("Re-homing");
             } else {
                 // --- THIS IS A NORMAL ENCODER ROTATION ---
                 currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
