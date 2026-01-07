@@ -690,4 +690,123 @@ public class Utilities {
             return state;
         }
     }
+    /**
+     * Manages a TeleOp-specific pickup sequence for a single ball.
+     * This manager is designed to be triggered by a button press. It activates the intake
+     * and waits until the color sensor detects a ball. Once a ball is captured, it
+     * automatically indexes the spindexer to the next compartment and then returns to an
+     * idle state, ready for the next button press.
+     *
+     * This manager explicitly does NOT control the shooter motor.
+     */
+    public static class TeleOpPickupManager {
+
+        public enum PickupState {
+            IDLE,           // Waiting for a command
+            START_PICKUP,   // Closing the door and starting the intake
+            WAITING_FOR_BALL, // Intake is running, waiting for the color sensor
+            INDEXING,       // Ball detected, moving the spindexer to the next slot
+            WAIT_FOR_INDEX  // Waiting for the spindexer rotation to finish
+        }
+
+        private PickupState state = PickupState.IDLE;
+
+        // Hardware and Logic Dependencies
+        private final Door door;
+        private final IntakeActive intakeActive;
+        private final SpindexerIndexerLogic spindexerLogic;
+        private final ColorSensor colorSensor;
+        private final IndicatorLight indicator; // For visual feedback
+
+        /**
+         * Initializes the TeleOpPickupManager.
+         * @param door The robot's door mechanism.
+         * @param intakeActive The robot's intake motor.
+         * @param spindexerLogic The logic controller for the spindexer.
+         * @param colorSensor The color sensor used to detect a ball.
+         * @param indicator The indicator light for visual feedback.
+         */
+        public TeleOpPickupManager(Door door, IntakeActive intakeActive, SpindexerIndexerLogic spindexerLogic, ColorSensor colorSensor, IndicatorLight indicator) {
+            this.door = door;
+            this.intakeActive = intakeActive;
+            this.spindexerLogic = spindexerLogic;
+            this.colorSensor = colorSensor;
+            this.indicator = indicator;
+        }
+
+        /**
+         * The main update loop. Call this every cycle from your TeleOp.
+         * @param pickupButtonPressed A rising-edge signal (wasJustPressed) to start the sequence.
+         */
+        public void update(boolean pickupButtonPressed) {
+            // Always update the spindexer's internal logic.
+            spindexerLogic.update();
+
+            switch (state) {
+                case IDLE:
+                    // If the button is pressed and we're not already doing something...
+                    if (pickupButtonPressed) {
+                        state = PickupState.START_PICKUP;
+                    }
+                    break;
+
+                case START_PICKUP:
+                    // 1. Prepare for intake.
+                    door.unlock();
+                    door.forceClose();
+                    intakeActive.intakeOn();
+                    // 2. Move to the next state to wait for the ball.
+                    state = PickupState.WAITING_FOR_BALL;
+                    break;
+
+                case WAITING_FOR_BALL:
+                    // 3. Continuously check for a ball.
+                    // The isBall method also handles the indicator light.
+                    if (Utilities.isBall(colorSensor, indicator)) {
+                        // 4. Ball detected! Turn off the intake and command the indexer.
+                        intakeActive.intakeOff();
+                        spindexerLogic.nextCompartment();
+                        state = PickupState.INDEXING;
+                    }
+                    break;
+
+                case INDEXING:
+                    // This is a transition state. Wait for the spindexer to START moving.
+                    // This prevents us from immediately skipping the wait state.
+                    if (spindexerLogic.isBusy()) {
+                        state = PickupState.WAIT_FOR_INDEX;
+                    }
+                    break;
+
+                case WAIT_FOR_INDEX:
+                    // 5. Wait for the spindexer to finish its rotation.
+                    if (spindexerLogic.isFinished()) {
+                        // 6. Sequence complete. Return to idle.
+                        state = PickupState.IDLE;
+                    }
+                    break;
+            }
+        }
+
+        /**
+         * Call this to forcibly stop the pickup process and turn off the intake.
+         * Useful if the button is released mid-sequence.
+         */
+        public void stop() {
+            intakeActive.intakeOff();
+            state = PickupState.IDLE;
+        }
+
+        /**
+         * Checks if the manager is currently busy with a pickup sequence.
+         * @return true if the state is not IDLE.
+         */
+        public boolean isBusy() {
+            return state != PickupState.IDLE;
+        }
+
+        public PickupState getState() {
+            return state;
+        }
+    }
 }

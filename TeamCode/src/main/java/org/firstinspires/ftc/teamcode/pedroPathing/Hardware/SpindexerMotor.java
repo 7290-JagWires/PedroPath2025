@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.pedroPathing.Hardware;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 
 public class SpindexerMotor {
 
@@ -12,6 +13,12 @@ public class SpindexerMotor {
     public static final int TICKS_PER_REV = 4063;
     public static final int COMPARTMENTS = 3;
     public static final int TICKS_PER_COMPARTMENT = TICKS_PER_REV / COMPARTMENTS; // Approximately 1354
+
+    public static final double TUNED_P = 12.0; // A slightly higher P might give a snappier response
+    public static final double TUNED_I = 3.0;
+    public static final double TUNED_D = 0.5;  // A small D can help reduce overshoot
+    public static final double TUNED_F = 0.0;
+
 
     public SpindexerMotor(HardwareMap hwMap) {
         motor = hwMap.get(DcMotorEx.class, "spindexer");
@@ -26,16 +33,20 @@ public class SpindexerMotor {
         // Reset the encoder to 0 at startup. This is a critical step.
         motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        PIDFCoefficients pidfCoefficients = motor.getPIDFCoefficients(DcMotor.RunMode.RUN_TO_POSITION);
+
+        // Update the coefficients with YOUR tuned values.
+        pidfCoefficients.p = TUNED_P;
+        pidfCoefficients.i = TUNED_I;
+        pidfCoefficients.d = TUNED_D;
+        pidfCoefficients.f = TUNED_F;
+
         // Set an initial target position of 0.
         motor.setTargetPosition(0);
 
         // IMPORTANT: Switch the motor to RUN_TO_POSITION mode.
         // It will now actively try to reach and hold the target position.
         motor.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-        // You can set an initial power. The motor will use this power
-        // to move towards the target position.
-        motor.setPower(1.0);
     }
 
     /**

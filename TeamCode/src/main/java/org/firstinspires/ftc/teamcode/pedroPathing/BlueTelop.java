@@ -87,11 +87,8 @@ public class BlueTelop extends OpMode {
         // --- Driver 2: Controller ---
         robot.manualShootManager.update(gamepad2.yWasPressed(), robot.dumpManager.isDumping());
         robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
-        if (gamepad2.aWasPressed()) {
-            robot.pickupManager.start();
-            robot.pickupManager.setTotalBallCount(0);
-            robot.update();
-        }
+
+        robot.teleOpPickupManager.update(gamepad2.bWasPressed());
 
         // Run the main robot update loop
         robot.update();

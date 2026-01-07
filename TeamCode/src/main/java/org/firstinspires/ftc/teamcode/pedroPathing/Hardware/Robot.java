@@ -9,7 +9,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.SpindexerRotator;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.PickupManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.TeleOpPickupManager;
 
 public class Robot {
     public final OpMode opMode;
@@ -32,7 +32,7 @@ public class Robot {
     public final SpindexerRotator spindexerRotator;
     public final ManualShootManager manualShootManager;
     public final MagneticLimitSwitch spindexerMag;
-    public final PickupManager pickupManager;
+    public TeleOpPickupManager teleOpPickupManager;
     private static final int TICKS_PER_COMPARTMENT = 1354;//I would leave this in case we need to go back to encoder counting for compartments - AH
 
     public Robot(OpMode opMode) {
@@ -53,7 +53,7 @@ public class Robot {
         spindexerRotator = new SpindexerRotator(spindexerLogic);
         dumpManager = new DumpManager(opMode, shooter, door, spindexerLogic,spindexerRotator);
         manualShootManager = new ManualShootManager(door, spindexerLogic);
-        pickupManager = new Utilities.PickupManager(door, shooter, intakeActive, spindexerLogic, colorSensor, indicator);
+        teleOpPickupManager = new TeleOpPickupManager(door, intakeActive, spindexerLogic, colorSensor, indicator);
     }
 
     public void update() {
@@ -63,7 +63,6 @@ public class Robot {
         shooter.run();
         dumpManager.update();
         spindexerRotator.update();
-        pickupManager.update();
     }
 
     public void stopAll() {
