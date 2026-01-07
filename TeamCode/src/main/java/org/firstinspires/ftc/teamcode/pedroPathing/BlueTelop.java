@@ -6,7 +6,6 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
 
 @TeleOp()
 public class BlueTelop extends OpMode {
@@ -88,6 +87,8 @@ public class BlueTelop extends OpMode {
         // --- Driver 2: Controller ---
         robot.manualShootManager.update(gamepad2.yWasPressed(), robot.dumpManager.isDumping());
         robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
+        robot.manualPickupManager.update(gamepad2.aWasPressed());
+
 
         // Run the main robot update loop
         robot.update();

@@ -416,7 +416,6 @@ public class Utilities {
                     isTeleOpDumping = false; // Turn off dump mode
 
                     // Reset hardware to a safe state
-                    shooter.stop();
                     door.unlock();
                     door.forceClose();
                 }
@@ -627,6 +626,70 @@ public class Utilities {
 
         public ShootState getState() {
             return shootState;
+        }
+    }
+    /**
+     * Manages a very simple manual pickup (indexing) action.
+     * When commanded, this class will rotate the spindexer by one compartment and then stop.
+     * This is useful for manual adjustments or loading a single ball without the full intake process.
+     */
+    public static class ManualPickupManager {
+
+        public enum ManualPickupState { IDLE, INDEXING, WAIT_FOR_SPIN }
+        private ManualPickupState state = ManualPickupState.IDLE;
+
+        private final SpindexerIndexerLogic spindexerLogic;
+
+        /**
+         * Initializes the manager with the spindexer logic controller.
+         * @param spindexerLogic The logic controller for the spindexer.
+         */
+        public ManualPickupManager(SpindexerIndexerLogic spindexerLogic) {
+            this.spindexerLogic = spindexerLogic;
+        }
+
+        /**
+         * The main update loop. Call this every cycle.
+         * @param pickupButtonPressed A rising-edge signal (wasJustPressed) for the pickup button.
+         */
+        public void update(boolean pickupButtonPressed) {
+            // Always update the underlying spindexer logic.
+            spindexerLogic.update();
+
+            switch (state) {
+                case IDLE:
+                    // If the button is pressed, command the spindexer to move and change state.
+                    if (pickupButtonPressed) {
+                        spindexerLogic.nextCompartment();
+                        state = ManualPickupState.INDEXING;
+                    }
+                    break;
+                case INDEXING:
+                    // This is a transition state. Wait for the spindexer to START moving.
+                    // This prevents immediately skipping the WAIT_FOR_SPIN state.
+                    if (!spindexerLogic.isFinished()) {
+                        state = ManualPickupState.WAIT_FOR_SPIN;
+                    }
+                    break;
+                case WAIT_FOR_SPIN:
+                    // Wait for the spindexer to report that its rotation is complete.
+                    if (spindexerLogic.isFinished()) {
+                        state = ManualPickupState.IDLE;
+                    }
+                    break;
+            }
+        }
+
+        /**
+         * Checks if the manager is currently busy indexing.
+         * @return true if the state is not IDLE.
+         */
+        public boolean isIndexing() {
+            return state != ManualPickupState.IDLE;
+        }
+
+        public ManualPickupState getState() {
+            return state;
         }
     }
 }

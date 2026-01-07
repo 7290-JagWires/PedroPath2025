@@ -58,13 +58,13 @@ public class SpindexerIndexerLogic {
             if ((currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS == 0) {
                 // --- THIS IS A RE-HOMING ROTATION ---
                 // Instead of using encoders, we'll spin with raw power and look for the magnet.
-                motor.setPower(1.0); // Use a method that sets RUN_USING_ENCODER
+                motor.setPower(.5); // Use a method that sets RUN_USING_ENCODER
                 indexerState = IndexerState.REHOMING;
             } else {
                 // --- THIS IS A NORMAL ENCODER ROTATION ---
                 currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
                 cumulativeTargetTicks += SpindexerMotor.TICKS_PER_COMPARTMENT;
-                motor.setTargetTicks(cumulativeTargetTicks, 1.0);
+                motor.setTargetTicks(cumulativeTargetTicks, .75);
                 indexerState = IndexerState.MOVING;
             }
             justIndexed = true;
@@ -121,6 +121,10 @@ public class SpindexerIndexerLogic {
     public int getIntakeCompartment() { return currentTargetCompartment + 1; }
     public int getShooterCompartment() { return ((currentTargetCompartment + 1) % 3) + 1; }
     public int getNextUpCompartment() { return ((currentTargetCompartment + 2) % 3) + 1; }
+
+    public boolean isFinished() {
+        return indexerState == IndexerState.IDLE || indexerState == IndexerState.FINISHED;
+    }
 
     /**
      * Checks if the spindexer motor is currently moving to a target position.
