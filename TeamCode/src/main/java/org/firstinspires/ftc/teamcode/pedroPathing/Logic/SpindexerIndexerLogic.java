@@ -51,26 +51,32 @@ public class SpindexerIndexerLogic {
      -
 
      */
-    // In SpindexerIndexerLogic.java
+    /**
+     * Commands the spindexer to move to the next logical compartment using encoders.
+     * This method no longer performs a special re-homing rotation; it treats every
+     * compartment advance as a standard encoder-based move.
+     */
     public void nextCompartment() {
         if (indexerState == IndexerState.IDLE || indexerState == IndexerState.FINISHED) {
-            // Check if the NEXT compartment is the zero position.
-            if ((currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS == 0) {
-                // --- THIS IS A RE-HOMING ROTATION ---
-                // Instead of using encoders, we'll spin with raw power and look for the magnet.
-                motor.setPower(.5); // Use a method that sets RUN_USING_ENCODER
-                indexerState = IndexerState.REHOMING;
-                opMode.telemetry.addLine("Re-homing");
-            } else {
-                // --- THIS IS A NORMAL ENCODER ROTATION ---
-                currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
-                cumulativeTargetTicks += SpindexerMotor.TICKS_PER_COMPARTMENT;
-                motor.setTargetTicks(cumulativeTargetTicks, .75);
-                indexerState = IndexerState.MOVING;
-            }
+            // --- THIS IS NOW ALWAYS A NORMAL ENCODER ROTATION ---
+
+            // Increment the logical compartment, wrapping around from 2 back to 0.
+            currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
+
+            // Increment the absolute encoder target by one compartment's worth of ticks.
+            cumulativeTargetTicks += SpindexerMotor.TICKS_PER_COMPARTMENT;
+
+            // Command the motor to move to the new absolute target.
+            motor.setTargetTicks(cumulativeTargetTicks, .75);
+
+            // Set the state machine to wait for the move to complete.
+            indexerState = IndexerState.MOVING;
+
+            // Flag that an index just occurred (used by other managers, e.g., to close a door).
             justIndexed = true;
         }
     }
+
     /**
      * Checks if the homing magnet is detected and resets the encoder to zero.
      * This is useful for re-calibrating the spindexer's position.
