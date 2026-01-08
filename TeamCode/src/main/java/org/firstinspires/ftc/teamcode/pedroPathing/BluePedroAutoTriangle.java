@@ -2,6 +2,8 @@ package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
+
 @Autonomous(name = "Blue Auto Triangle", group = "Pedro")
 public class BluePedroAutoTriangle extends BaseAutonomous {
 
@@ -23,6 +25,7 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
     }
 
     public void autonomousPathUpdate() {
+        shooter.setDefaultVelocity(Shooter.SHOOT_TRIANGLE_VELOCITY);
         switch (pathState) {
             case DRIVE_START_SCORE:
                 // Get the tag ID that was detected during the init_loop
@@ -88,7 +91,7 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
             case SCORE2:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     if (dumpManager.isFinished()) {
-                        shooter.stop();         //Turn off the shooter when we finish auto
+                        shooter.stopShooter();         //Turn off the shooter when we finish auto
                         if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // end state machine
                             follower.followPath(paths.endPointTriangle);

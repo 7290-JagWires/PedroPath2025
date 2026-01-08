@@ -1,100 +1,94 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.Hardware;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Shooter {
 
-    private OpMode myOpMode;
+    private final OpMode myOpMode;
     private final DcMotorEx shooter;
 
-    // POWER MODE CONSTANTS
-    private static final double SHOOTER_FORWARD = 0.8;
-    private static final double SHOOTER_REVERSE = -0.8;
-    private static final double SHOOTER_OFF     = 0.0;
+    // --- Velocity Constants (in Ticks per Second) ---
+    // Public so other classes can see them (like your Auto op-modes)
+    public static final double SHOOTER_OFF_VELOCITY = 0.0;
+    public static final double SHOOT_TRIANGLE_VELOCITY = 2600;
+    public static final double SHOOT_GOAL_VELOCITY = 2100;
 
-    private static final double SHOOT_TRIANGLE_VELOCITY = 2650;
-    private static final double SHOOT_GOAL_VELOCITY = 1900;
-
+    // This variable will store the current "default" speed for TeleOp
+    private double targetVelocity = SHOOT_GOAL_VELOCITY; // Default to goal velocity on startup
 
     public Shooter(OpMode opMode) {
         myOpMode = opMode;
 
-
         shooter = myOpMode.hardwareMap.get(DcMotorEx.class, "shooter");
 
-        // Start in encoder mode to allow velocity control later
+        shooter.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
         shooter.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
-        shooter.setVelocity(SHOOTER_OFF);
-
+        shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooter.setDirection(DcMotorSimple.Direction.FORWARD);
+
+        // Start with the motor off
+        shooter.setVelocity(SHOOTER_OFF_VELOCITY);
     }
 
     // -------------------------------------------------------------
-    // TELEOP RUNTIME CONTROL
+    // PRIMARY CONTROL METHODS
     // -------------------------------------------------------------
-    /** Default behavior: shooter ON unless RB pressed or LT reverse */
-    public void run() {
 
-        if (myOpMode.gamepad2.right_bumper) {
-            stopFast();     // active braking
-        }
-        else if (myOpMode.gamepad2.left_trigger > 0.1) {
-            shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            shooter.setPower(SHOOTER_REVERSE);
-        }
-        else {
-            shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            shooter.setPower(SHOOTER_FORWARD);
-        }
-    }
-    public void stop() {
-        shooter.setPower(SHOOTER_OFF);
+    /**
+     * Sets the default shooting velocity that will be used when setTargetVelocity() is called.
+     * Call this from your Auto op-mode to prepare for TeleOp.
+     * @param defaultVelocity The desired default speed (e.g., SHOOT_TRIANGLE_VELOCITY).
+     */
+    public void setDefaultVelocity(double defaultVelocity) {
+        this.targetVelocity = defaultVelocity;
     }
 
-    // -------------------------------------------------------------
-    // ACTIVE BRAKING (FAST STOP)
-    // -------------------------------------------------------------
-    /** Stops the shooter quickly with a short reverse pulse */
-    public void stopFast() {
-        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        // Apply short reverse pulse to cancel inertia
-        shooter.setPower(-0.20);
-//        wait(50);
-//        myOpMode.sleep(50);
-
-        shooter.setPower(0);
+    /**
+     * Spins the shooter up to the currently set default velocity.
+     */
+    public void setTargetVelocity() {
+        shooter.setVelocity(this.targetVelocity);
     }
 
-    // -------------------------------------------------------------
-    // VELOCITY CONTROL FOR SHOOTERTEST
-    // -------------------------------------------------------------
-    /** Switch to velocity mode and set ticks/sec */
-    public void setVelocity(double velocity) {
-        shooter.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    /**
+     * Overrides the default and sets the shooter to a specific velocity.
+     * Useful for distance-based shooting.
+     * @param velocity The specific target velocity in ticks per second.
+     */
+    public void setExplicitVelocity(double velocity) {
         shooter.setVelocity(velocity);
     }
 
-    /** Stops the shooter from velocity mode using active braking */
-    public void stopVelocity() {
-        // Leave velocity mode → go to power mode for braking
-        shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
-        shooter.setPower(-0.20);
-//        wait(50);
-//        myOpMode.sleep(50);
-
-        shooter.setPower(0);
+    /**
+     * Stops the shooter by setting its target velocity to 0.
+     * The motor's PID will actively work to hold this zero velocity.
+     */
+    public void stopShooter() {
+        shooter.setVelocity(SHOOTER_OFF_VELOCITY);
     }
 
-    /** Allow ShooterTest to read shooter velocity */
+
+    // -------------------------------------------------------------
+    // UTILITY METHODS
+    // -------------------------------------------------------------
+
+    /**
+     * Gets the current velocity of the shooter motor.
+     * @return The current velocity in ticks per second.
+     */
     public double getVelocity() {
         return shooter.getVelocity();
+    }
+
+    /**
+     * Gets the currently configured default target velocity.
+     * @return The default velocity in ticks per second.
+     */
+    public double getDefaultVelocity() {
+        return this.targetVelocity;
     }
 }

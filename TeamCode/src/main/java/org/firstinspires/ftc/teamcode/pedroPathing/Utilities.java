@@ -132,7 +132,7 @@ public class Utilities {
             door.unlock();
             door.forceClose();
             pickupCount = 0;
-            shooter.stop();
+            shooter.stopShooter();
         }
 
         /**
@@ -311,7 +311,6 @@ public class Utilities {
                 this.dumpState = DumpState.SPIN_UP;
                 this.dumpCount = 0;
                 this.dumpTimer.reset();
-                this.shooter.run();
             }
         }
 
@@ -412,7 +411,7 @@ public class Utilities {
                     isTeleOpDumping = false; // Turn off dump mode
 
                     // Reset hardware to a safe state
-                    shooter.stop();
+                    shooter.stopShooter();
                     door.unlock();
                     door.forceClose();
                 }

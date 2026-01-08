@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
@@ -81,7 +82,19 @@ public class BlueTelop extends OpMode {
         // --- Sensor Updates ---
         Utilities.isBall(robot.colorSensor, robot.indicator);
 
-        robot.manualShootManager.update(gamepad2.yWasPressed(), robot.dumpManager.isDumping());
+        if (gamepad2.rightBumperWasPressed()) {
+            robot.shooter.stopShooter();
+        }
+
+        if (gamepad2.yWasPressed()) {
+           robot.shooter.setTargetVelocity();
+///
+///             we will need to use distance to toggle between shooting goals and triangles
+///             this one will be needed if we use the dpad for speeding up and down before shooting
+///             robot.shooter.setExplicitVelocity(Shooter.SHOOT_TRIANGLE_VELOCITY);
+///
+           robot.manualShootManager.update(gamepad2.yWasPressed(), robot.dumpManager.isDumping());
+       }
 
         // --- Driver 1: Drivetrain ---
         Utilities.handleRobotCentricDrive(gamepad1, robot);
