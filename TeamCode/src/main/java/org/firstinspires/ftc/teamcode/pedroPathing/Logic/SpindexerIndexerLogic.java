@@ -4,6 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.SpindexerMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 
@@ -98,9 +99,17 @@ public class SpindexerIndexerLogic {
         // so setting the power didn't make it move. I added setModeRunUsingEncoder()
         moveDirection = 1; // Record we are moving forward
         motor.setModeRunUsingEncoder();
-        motor.setPower(.9);
+        motor.setPower(INDEX_POWER);
     }
 
+    /**  Spindexer starts moving to the previous compartment. You must also call
+    spinderLimitSwitchCheck() in the main loop so it stops when the limit switch is triggered
+     **/
+    public void previousCompartment() {
+        moveDirection = -1; // Record we are moving backward
+        motor.setModeRunUsingEncoder();
+        motor.setPower(-INDEX_POWER); // Use negative power to move in reverse
+    }
     public void nextCompartmentAuto() {
         // I think the biggest problem was the motor was set to the RunToPosition mode
         // so setting the power didn't make it move. I added setModeRunUsingEncoder()

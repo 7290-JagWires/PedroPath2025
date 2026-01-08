@@ -58,19 +58,7 @@ public class BlueTelop extends OpMode {
      */
     @Override
     public void init_loop() {
-        if (homingState == HomingState.HOMING) {
-            telemetry.addLine("Homing Spindexer...");
-
-            robot.spindexer.setModeRunUsingEncoder();
-            robot.spindexer.setPower(0.5);
-
-            // Check if the magnet is triggered
-            if (robot.spindexerMag.isTriggered()) {
-                robot.spindexer.stop();
-                homingState = HomingState.COMPLETE;
-                telemetry.addLine("Homing Complete. Ready to Start.");
-            }
-        }
+        handleHoming();
         telemetry.update();
     }
 
@@ -105,6 +93,21 @@ public class BlueTelop extends OpMode {
         // Run the main robot update loop
         robot.update();
 
+        // Handle Manual Rotation forward and back
+        if (gamepad2.aWasPressed()) {
+            robot.spindexerRotator.start(1);  //we now rotate one compartment
+        }
+
+        if (gamepad2.bWasPressed()) {
+            robot.spindexerRotator.start(-1);  //we now rotate one compartment backwards
+        }
+
+        //Handle a manual homing
+        if (gamepad2.xWasPressed()) {
+            homingState = HomingState.HOMING;
+            handleHoming();
+        }
+
         // Auto-close door after indexing
         if (robot.spindexer.justIndexed) {
             robot.door.forceClose();
@@ -130,7 +133,25 @@ public class BlueTelop extends OpMode {
     // =========================================================================================
     //                            Helper Methods for the Loop()
     // =========================================================================================
+    /**
+     * This is the new helper method that contains the homing logic.
+     */
+    private void handleHoming() {
+        if (homingState == HomingState.HOMING) {
+            telemetry.addLine("Homing Spindexer...");
 
+            robot.spindexer.setModeRunUsingEncoder();
+            robot.spindexer.setPower(0.5);
+
+            // Check if the magnet is triggered
+            if (robot.spindexerMag.isTriggered()) {
+                robot.spindexer.stop();
+                homingState = HomingState.COMPLETE;
+                telemetry.addLine("Homing Complete. Ready to Start.");
+            }
+        }
+        telemetry.update();
+    }
     private void updateTelemetry() {
         // Display the robot's current position on the telemetry
         Pose currentPose = follower.getPose();

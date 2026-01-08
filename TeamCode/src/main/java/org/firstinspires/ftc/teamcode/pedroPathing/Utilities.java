@@ -456,6 +456,7 @@ public class Utilities {
         private final SpindexerIndexerLogic spindexerLogic;
         private final ElapsedTime timer = new ElapsedTime();
         private int rotationsNeeded = 0;
+        private int moveDirection = 1; // 1 for forward, -1 for backward
 
         private static final int ROTATION_PAUSE_MS = 500; // Pause between spins
 
@@ -471,16 +472,24 @@ public class Utilities {
         /**
          * Starts the rotation sequence.
          *
-         * @param numberOfRotations The number of compartments to rotate (1 or 2).
+         * @param numberOfRotations The number of compartments to rotate.
+         *                          Positive (1 or 2) for forward, negative (-1) for backward.
          */
         public void start(int numberOfRotations) {
             if (rotateState == RotateState.IDLE || rotateState == RotateState.FINISHED) {
-                if (numberOfRotations > 0 && numberOfRotations <= 2) {
-                    this.rotationsNeeded = numberOfRotations;
+                // Determine direction and absolute number of rotations
+                if (numberOfRotations < 0) {
+                    moveDirection = -1;
+                    rotationsNeeded = Math.abs(numberOfRotations);
+                } else {
+                    moveDirection = 1;
+                    rotationsNeeded = numberOfRotations;
+                }
+
+                if (rotationsNeeded > 0) {
                     this.rotateState = RotateState.START_ROTATION;
                 } else {
-                    // If 0 or invalid number, just go straight to finished.
-                    this.rotationsNeeded = 0;
+                    // If 0 is passed, just go straight to finished.
                     this.rotateState = RotateState.FINISHED;
                 }
             }
@@ -495,7 +504,12 @@ public class Utilities {
                     break;
 
                 case START_ROTATION:
-                    spindexerLogic.nextCompartment(); // Start the first spin
+                    // Call the correct method based on the stored direction
+                    if (moveDirection == 1) {
+                        spindexerLogic.nextCompartment();
+                    } else {
+                        spindexerLogic.previousCompartment();
+                    }
                     timer.reset();
                     rotateState = RotateState.WAIT_FOR_FIRST_SPIN;
                     break;
@@ -517,7 +531,12 @@ public class Utilities {
                 case START_SECOND_ROTATION:
                     // Wait for the pause to complete before starting the next spin
                     if (timer.milliseconds() > ROTATION_PAUSE_MS) {
-                        spindexerLogic.nextCompartment(); // Start the second spin
+                        // Call the correct method based on the stored direction
+                        if (moveDirection == 1) {
+                            spindexerLogic.nextCompartment();
+                        } else {
+                            spindexerLogic.previousCompartment();
+                        }
                         rotateState = RotateState.WAIT_FOR_SECOND_SPIN;
                     }
                     break;
