@@ -15,6 +15,8 @@ public class Shooter {
     public static final double SHOOTER_OFF_VELOCITY = 0.0;
     public static final double SHOOT_TRIANGLE_VELOCITY = 2600;
     public static final double SHOOT_GOAL_VELOCITY = 2100;
+    public static final double NEGATIVE_VELOCITY = -1000;
+
 
     // This variable will store the current "default" speed for TeleOp
     private double targetVelocity = SHOOT_GOAL_VELOCITY; // Default to goal velocity on startup

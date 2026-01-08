@@ -504,11 +504,7 @@ public class Utilities {
 
                 case START_ROTATION:
                     // Call the correct method based on the stored direction
-                    if (moveDirection == 1) {
-                        spindexerLogic.nextCompartment();
-                    } else {
-                        spindexerLogic.previousCompartment();
-                    }
+                    spindexerLogic.nextCompartment();
                     timer.reset();
                     rotateState = RotateState.WAIT_FOR_FIRST_SPIN;
                     break;
@@ -531,11 +527,7 @@ public class Utilities {
                     // Wait for the pause to complete before starting the next spin
                     if (timer.milliseconds() > ROTATION_PAUSE_MS) {
                         // Call the correct method based on the stored direction
-                        if (moveDirection == 1) {
-                            spindexerLogic.nextCompartment();
-                        } else {
-                            spindexerLogic.previousCompartment();
-                        }
+                        spindexerLogic.nextCompartment();
                         rotateState = RotateState.WAIT_FOR_SECOND_SPIN;
                     }
                     break;

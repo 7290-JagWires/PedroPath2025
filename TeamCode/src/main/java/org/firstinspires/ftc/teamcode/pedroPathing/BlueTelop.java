@@ -112,7 +112,7 @@ public class BlueTelop extends OpMode {
         }
 
         if (gamepad2.bWasPressed()) {
-            robot.spindexerRotator.start(-1);  //we now rotate one compartment backwards
+            robot.spindexerLogic.previousCompartment();  //we now rotate one compartment backwards
         }
 
         //Handle a manual homing
