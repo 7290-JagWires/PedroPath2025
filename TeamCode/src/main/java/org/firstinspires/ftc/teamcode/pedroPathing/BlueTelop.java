@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_GOAL_VELOCITY;
+
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -87,7 +89,7 @@ public class BlueTelop extends OpMode {
         }
 
         if (gamepad2.yWasPressed()) {
-           robot.shooter.setTargetVelocity();
+           robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
 ///
 ///             we will need to use distance to toggle between shooting goals and triangles
 ///             this one will be needed if we use the dpad for speeding up and down before shooting

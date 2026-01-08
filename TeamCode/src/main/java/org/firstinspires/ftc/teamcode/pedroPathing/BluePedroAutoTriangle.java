@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_GOAL_VELOCITY;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_TRIANGLE_VELOCITY;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
@@ -25,7 +28,7 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
     }
 
     public void autonomousPathUpdate() {
-        shooter.setDefaultVelocity(Shooter.SHOOT_TRIANGLE_VELOCITY);
+        shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
         switch (pathState) {
             case DRIVE_START_SCORE:
                 // Get the tag ID that was detected during the init_loop

@@ -132,7 +132,6 @@ public class Utilities {
             door.unlock();
             door.forceClose();
             pickupCount = 0;
-            shooter.stopShooter();
         }
 
         /**
@@ -411,7 +410,6 @@ public class Utilities {
                     isTeleOpDumping = false; // Turn off dump mode
 
                     // Reset hardware to a safe state
-                    shooter.stopShooter();
                     door.unlock();
                     door.forceClose();
                 }

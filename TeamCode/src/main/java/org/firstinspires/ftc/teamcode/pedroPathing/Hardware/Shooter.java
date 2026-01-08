@@ -33,7 +33,7 @@ public class Shooter {
         shooter.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // Start with the motor off
-        shooter.setVelocity(SHOOTER_OFF_VELOCITY);
+        shooter.setVelocity(SHOOT_GOAL_VELOCITY);
     }
 
     // -------------------------------------------------------------
