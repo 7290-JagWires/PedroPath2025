@@ -13,8 +13,8 @@ public class Shooter {
     private final DcMotorEx shooter;
 
     // POWER MODE CONSTANTS
-    private static final double SHOOTER_FORWARD = 0.9;
-    private static final double SHOOTER_REVERSE = -0.9;
+    private static final double SHOOTER_FORWARD = 0.8;
+    private static final double SHOOTER_REVERSE = -0.8;
     private static final double SHOOTER_OFF     = 0.0;
 
     private static final double SHOOT_TRIANGLE_VELOCITY = 2650;

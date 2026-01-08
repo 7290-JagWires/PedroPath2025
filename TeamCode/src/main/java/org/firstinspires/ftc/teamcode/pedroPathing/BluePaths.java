@@ -17,7 +17,7 @@ public class BluePaths {
     // Poses can be public and static so they can be accessed from anywhere
     public static final Pose startPose = new Pose(17, 115, Math.toRadians(25));
     public static final Pose startPoseTriangle = new Pose(56, 9, Math.toRadians(90));
-    public static final Pose shootPoint = new Pose(59, 85, Math.toRadians(150));
+    public static final Pose shootPoint = new Pose(59, 85, Math.toRadians(145));
     public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(120));
 
     //Common poses for all programs
