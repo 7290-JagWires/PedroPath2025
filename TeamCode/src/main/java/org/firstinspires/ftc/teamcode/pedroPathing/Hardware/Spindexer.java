@@ -1,26 +1,19 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.Hardware;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 
 public class Spindexer {
 
-    private final DcMotorEx motor;
+    private final SpindexerMotor motor;
     private final MagneticLimitSwitch limit;
+    private final SpindexerIndexerLogic spindexerLogic; // Assuming you have a reference to it
 
     // constants
 
     public static final int COMPARTMENTS = 3;
-    public static final int TICKS_PER_REV = 4063;
-    public static final int TICKS_PER_COMPARTMENT = TICKS_PER_REV / COMPARTMENTS;
-
-    private static final double INDEX_POWER = 0.50;
-
 
     // 0 = Comp1, 1 = Comp2, 2 = Comp3
     private int compartmentIndex = 0;
@@ -29,52 +22,29 @@ public class Spindexer {
     // Lets TeleOp know a move happened (used for auto-close door)
     public boolean justIndexed = false;
 
-   // boolean limitSwitchTriggered = false;
-
     boolean lookingForLimitSwitch = false;
-
-    private void resetEncoder() {
-        motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+    // Add this enum at the top of your Spindexer class, with the other member variables.
+    public enum HomingState {
+        IDLE,    // Not doing anything
+        START,   // The OpMode has requested homing to start
+        HOMING,  // The motor is actively spinning, looking for the magnet
+        COMPLETE // The magnet has been found and the position is zeroed
     }
 
-    private void runUsingEncoder() {
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
+    // Add this variable to track the current state.
+    private HomingState homingState = HomingState.IDLE;
 
+    public Spindexer(OpMode opMode) {
+        // --- THIS IS THE ONLY CHANGE NEEDED IN THE CONSTRUCTOR ---
+        // Before: motor = opMode.hardwareMap.get(DcMotorEx.class, "spindexer");
+        // After:
+        motor = new SpindexerMotor(opMode.hardwareMap); // <-- Use the new class
 
+        limit = new MagneticLimitSwitch(opMode.hardwareMap, "magnetic_limit_sensor");
 
-    public Spindexer(OpMode opMode, MagneticLimitSwitch limit) {
-        motor = opMode.hardwareMap.get(DcMotorEx.class, "spindexer");
-        this.limit = limit;
+        spindexerLogic = new SpindexerIndexerLogic(opMode, motor, limit, COMPARTMENTS);
 
-
-        motor.setDirection(DcMotorSimple.Direction.REVERSE);
-        motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-
-    }
-
-    public void setModeRunUsingEncoder() {
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
-    /**  Spindexer starts moving to the next compartment. You must also call
-     spinderLimitSwitchCheck() in the main loop so it stops when the limit switch is triggered
-     **/
-    public void nextCompartment() {
-        // I think the biggest problem was the motor was set to the RunToPosition mode
-        // so setting the power didn't make it move. I added setModeRunUsingEncoder()
-        moveDirection = 1; // Record we are moving forward
-        runUsingEncoder();
-        motor.setPower(INDEX_POWER);
-    }
-
-    public void previousCompartment() {
-
-        moveDirection = -1; // Record we are moving backward
-        runUsingEncoder();;
-        // reverse direction
-        motor.setPower(-INDEX_POWER);
+        // ... rest of constructor
     }
 
     public void stop() {
@@ -93,15 +63,10 @@ public class Spindexer {
         }
     }
 
-    public void setPower(double power) {
-        motor.setPower(power);
-    }
-
-
     //Moved from original logic class
     public void updateMagnetZero() {
         if (limit.wasJustTriggered()) {
-            resetEncoder();
+ //           resetEncoder();
             compartmentIndex = 0;
         }
     }
@@ -129,97 +94,76 @@ public class Spindexer {
         }
     }
 
-
     public int getIntakeCompartment() { return compartmentIndex + 1; }
     public int getShooterCompartment() { return ((compartmentIndex + 1) % 3) + 1; }
     public int getNextUpCompartment() { return ((compartmentIndex + 2) % 3) + 1; }
 
-    //********
-//
-//    /** Returns current compartment index: 0, 1, or 2 */
-//    public int getCompartment() {
-//        int index = getCurrentPosition() / TICKS_PER_COMPARTMENT;
-//        return index % COMPARTMENTS;
-//    }
-//
-//    /** Returns compartment as 1, 2, or 3 for telemetry */
-//    public int getCompartmentDisplay() {
-//        return getCompartment() + 1;
-//    }
-//
-//
-//    public DcMotorEx getMotor() {
-//        return motor;
-//    }
-//
-//    public void setCompartment(int comp) {
-//        compartmentIndex = comp - 1;
-//        if (compartmentIndex < 0) compartmentIndex = 0;
-//        if (compartmentIndex > 2) compartmentIndex = 2;
-//    }
-//
-//
-//    /**
-//     * The idea here is the limit switch can only be triggered after it has
-//     * been false. That way, the magnet sitting at the limit switch won't show
-//     * it continually triggered.
-//     *
-//     * @return <code>true</code> boolean if the switch is triggered <code>false</code> if not.
-//     *
-//     **/
-//    public boolean limitSwitchTriggered() {
-//
-//        // We'll only return true once we've recorded a false reading
-//        if(lookingForLimitSwitch){
-//            opMode.telemetry.addLine("lookingForLimitSwitch");
-//            if(limit.isTriggered()){
-//                lookingForLimitSwitch = false;
-//                return true;
-//            }
-//        }
-//        // get the current state
-//        limitSwitchTriggered = limit.isTriggered();
-//
-//        // if the limit switch is currently false
-//        if( !limitSwitchTriggered ){
-//            // we're looking for the next trigger
-//            lookingForLimitSwitch = true;
-//        }
-//
-//        return false;
-//    }
-//
-//    /**
-//     * This checks to see if the limit switch has been reached and stops the motor
-//     * if it has. It also updates the compartment index.
-//     */
-//    public boolean spindexerLimitSwitchCheck() {
-//        if (limitSwitchTriggered()) {
-//            motor.stop();
-//            justIndexed = true; // Signal that a move completed
-//
-//            // Update index based on which way we were going
-//            if (moveDirection == 1) {
-//                // Moving Forward: Increment index (0 -> 1 -> 2 -> 0)
-//                compartmentIndex++;
-//                if (compartmentIndex > 2) {
-//                    compartmentIndex = 0;
-//                }
-//            } else if (moveDirection == -1) {
-//                // Moving Backward: Decrement index (0 -> 2 -> 1 -> 0)
-//                compartmentIndex--;
-//                if (compartmentIndex < 0) {
-//                    compartmentIndex = 2;
-//                }
-//            }
-//
-//            // Reset direction since we are now stopped
-//            moveDirection = 0;
-//
-//            return true;
-//        }
-//        return false;
-//    }
+    // In Spindexer.java
+
+    public void home() {
+        // Always update the sensor reading first
+        limit.update();
+        switch (homingState) {
+            case IDLE:
+                // No changes here
+                break;
+            case START:
+                // --- CHANGE HERE ---
+                // Use the motor's dedicated `setPower` method for manual control.
+                motor.setPower(0.5); // Start the motor spinning slowly
+                homingState = HomingState.HOMING;
+                break;
+            case HOMING:
+                // --- CHANGE HERE ---
+                if (limit.isTriggered()) {
+                    // When the magnet is found:
+                    // 1. Tell the SpindexerMotor to reset its internal encoder count to 0.
+                    //    This also re-enables RUN_TO_POSITION mode to hold the new zero.
+                    motor.resetEncoder();
+
+                    if (spindexerLogic != null) {
+                        spindexerLogic.resetPosition();
+                    }
+
+                    // 2. Set the state to complete.
+                    homingState = HomingState.COMPLETE;
+                }
+                break;
+            case COMPLETE:
+                // No changes needed here. The motor will automatically hold its zero position.
+                break;
+        }
+    }
+
+    /**
+     * Checks if the homing process has been successfully completed.
+     * @return true if the spindexer is homed, false otherwise.
+     */
+    public boolean isHomed() {
+        return homingState == HomingState.COMPLETE;
+    }
+
+    /**
+     * Returns the current state of the homing state machine. Useful for telemetry.
+     * @return The current HomingState.
+     */
+    public HomingState getHomingState() {
+        return homingState;
+    }
+
+    // Add this method to your Spindexer class.
+
+    /**
+     * Kicks off the homing sequence.
+     * Call this from your OpMode's init_loop.
+     */
+    public void startHoming() {
+        // Only start if we are idle (not already homing or complete)
+        if (homingState == HomingState.IDLE) {
+            homingState = HomingState.START;
+        }
+    }
+
 
 
 }

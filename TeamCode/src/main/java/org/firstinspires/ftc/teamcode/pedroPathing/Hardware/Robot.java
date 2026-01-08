@@ -1,18 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.Hardware;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.hardware.HardwareMap;
-
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.MecanumDrive;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.DriveTrain;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.PinpointLocalizer;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
@@ -20,6 +8,8 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.SpindexerRotator;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.TeleOpPickupManager;
 
 public class Robot {
     public final OpMode opMode;
@@ -38,10 +28,11 @@ public class Robot {
     public final Spindexer spindexer;
     public final SpindexerMotor spindexerMotor;
     public final SpindexerIndexerLogic spindexerLogic;
-    public final Utilities.DumpManager dumpManager;
-    public final Utilities.SpindexerRotator spindexerRotator;
-
+    public final DumpManager dumpManager;
+    public final SpindexerRotator spindexerRotator;
+    public final ManualShootManager manualShootManager;
     public final MagneticLimitSwitch spindexerMag;
+    public TeleOpPickupManager teleOpPickupManager;
     private static final int TICKS_PER_COMPARTMENT = 1354;//I would leave this in case we need to go back to encoder counting for compartments - AH
 
     public Robot(OpMode opMode) {
@@ -53,7 +44,7 @@ public class Robot {
         shooter      = new Shooter(opMode);
         door         = new Door(opMode);
         spindexerMag   = new MagneticLimitSwitch(opMode.hardwareMap, "magnetic_limit_sensor");
-        spindexer = new Spindexer(opMode, spindexerMag);
+        spindexer = new Spindexer(opMode);
         pinpoint = new PinpointLocalizer(opMode.hardwareMap);
         colorSensor = new ColorSensor(opMode.hardwareMap, "color_sensor");
         indicator = new IndicatorLight(opMode.hardwareMap, "rgbServo");
@@ -61,6 +52,8 @@ public class Robot {
         spindexerLogic = new SpindexerIndexerLogic(opMode, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
         dumpManager = new DumpManager(opMode, shooter, door, spindexerLogic,spindexerRotator);
+        manualShootManager = new ManualShootManager(door, spindexerLogic);
+        teleOpPickupManager = new TeleOpPickupManager(door, intakeActive, spindexerLogic, colorSensor, indicator);
     }
 
     public void update() {

@@ -1,160 +1,144 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.Logic;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-
-
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.SpindexerMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
 
 public class SpindexerIndexerLogic {
 
     private final OpMode opMode;
     private final SpindexerMotor motor;
     private final MagneticLimitSwitch limit;
-    private static final double INDEX_POWER = .75;
-    private boolean limitSwitchAlreadyPressed = false; // Add this variable
-    // ...
-    private final int ticksPerCompartment;
+    // In SpindexerIndexerLogic.java
+    public enum IndexerState { IDLE, MOVING, REHOMING, FINISHED }
 
-    // 0 = Comp1, 1 = Comp2, 2 = Comp3
-    private int compartmentIndex = 0;
-
-    private int moveDirection = 0; // 1 for forward, -1 for backward, 0 for stopped
-
+    // This is the only state variable we need to track.
+    private int currentTargetCompartment = 0;
+    private int cumulativeTargetTicks = 0; // Tracks the absolute target position
     // Lets TeleOp know a move happened (used for auto-close door)
     public boolean justIndexed = false;
 
-    boolean limitSwitchTriggered = false;
-
-    boolean lookingForLimitSwitch = false;
-
-
+    private IndexerState indexerState = IndexerState.IDLE;
 
     public SpindexerIndexerLogic(OpMode opMode,
                                  SpindexerMotor motor,
                                  MagneticLimitSwitch limit,
-                                 int ticksPerCompartment) {
+                                 int ticksPerCompartment) { // ticksPerCompartment is not used anymore but can stay for now
 
         this.opMode = opMode;
         this.motor = motor;
         this.limit = limit;
-        this.ticksPerCompartment = ticksPerCompartment;
 
-        motor.setPower(0);
-        motor.setModeRunUsingEncoder();
-        compartmentIndex = 0;
-
+        // The SpindexerMotor constructor already sets the motor to RUN_TO_POSITION
+        // and holds position 0. We don't need to do anything here.
     }
 
-    public void setCompartment(int comp) {
-        compartmentIndex = comp - 1;
-        if (compartmentIndex < 0) compartmentIndex = 0;
-        if (compartmentIndex > 2) compartmentIndex = 2;
+    /**
+     How this should work
+     - CurrentTargetCompartment starts at 0.
+     - We add 1 to it, making it 1.
+     - The modulo operator (%) calculates the remainder of a division. Since COMPARTMENTS is 3, we get: 1 % 3 equals 1.
+     - The result is stored back into currentTargetCompartment.
+     - Outcome: currentTargetCompartment is now 1. This line of code handles the "wrap-around" logic automatically.
+                When currentTargetCompartment is 2, the calculation becomes (2 + 1) % 3, which is 3 % 3,
+                and the remainder is 0. So the sequence will always be 0 -> 1 -> 2 -> 0 -> ....
+     - Now that we know which compartment we want (1), we need to translate that into a physical position for the motor.
+     - The SpindexerMotor class defines TICKS_PER_COMPARTMENT (which is 4063 / 3, or approximately 1354).
+     - The calculation becomes: targetTicks = 1 * 1354•Outcome: The variable targetTicks is now 1354.
+       The motor needs to spin until its encoder reads this value.
+     - We set the power to 100% and move to the target.
+     -
+
+     */
+    /**
+     * Commands the spindexer to move to the next logical compartment using encoders.
+     * This method no longer performs a special re-homing rotation; it treats every
+     * compartment advance as a standard encoder-based move.
+     */
+    public void nextCompartment() {
+        if (indexerState == IndexerState.IDLE || indexerState == IndexerState.FINISHED) {
+            // --- THIS IS NOW ALWAYS A NORMAL ENCODER ROTATION ---
+
+            // Increment the logical compartment, wrapping around from 2 back to 0.
+            currentTargetCompartment = (currentTargetCompartment + 1) % SpindexerMotor.COMPARTMENTS;
+
+            // Increment the absolute encoder target by one compartment's worth of ticks.
+            cumulativeTargetTicks += SpindexerMotor.TICKS_PER_COMPARTMENT;
+
+            // Command the motor to move to the new absolute target.
+            motor.setTargetTicks(cumulativeTargetTicks, .75);
+
+            // Set the state machine to wait for the move to complete.
+            indexerState = IndexerState.MOVING;
+
+            // Flag that an index just occurred (used by other managers, e.g., to close a door).
+            justIndexed = true;
+        }
     }
 
+    /**
+     * Checks if the homing magnet is detected and resets the encoder to zero.
+     * This is useful for re-calibrating the spindexer's position.
+     */
     public void updateMagnetZero() {
         if (limit.wasJustTriggered()) {
             motor.resetEncoder();
-            compartmentIndex = 0;
+            // When we reset at the magnet, we know we are at compartment 0.
+            currentTargetCompartment = 0;
         }
     }
-
+    public void resetPosition() {
+        currentTargetCompartment = 0;
+        cumulativeTargetTicks = 0;
+    }
     /**
-     * The idea here is the limit switch can only be triggered after it has
-     * been false. That way, the magnet sitting at the limit switch won't show
-     * it continually triggered.
-     *
-     * @return <code>true</code> boolean if the switch is triggered <code>false</code> if not.
-     *
-     **/
-    public boolean limitSwitchTriggered() {
-
-        // We'll only return true once we've recorded a false reading
-        if(lookingForLimitSwitch){
-            opMode.telemetry.addLine("lookingForLimitSwitch");
-            if(limit.isTriggered()){
-                lookingForLimitSwitch = false;
-                return true;
-            }
-        }
-        // get the current state
-        limitSwitchTriggered = limit.isTriggered();
-
-        // if the limit switch is currently false
-        if( !limitSwitchTriggered ){
-            // we're looking for the next trigger
-            lookingForLimitSwitch = true;
-        }
-
-        return false;
-    }
-
-    /**  Spindexer starts moving to the next compartment. You must also call
-        spinderLimitSwitchCheck() in the main loop so it stops when the limit switch is triggered
-    **/
-    public void nextCompartment() {
-        // I think the biggest problem was the motor was set to the RunToPosition mode
-        // so setting the power didn't make it move. I added setModeRunUsingEncoder()
-        moveDirection = 1; // Record we are moving forward
-        motor.setModeRunUsingEncoder();
-        motor.setPower(.9);
-    }
-
-    public void nextCompartmentAuto() {
-        // I think the biggest problem was the motor was set to the RunToPosition mode
-        // so setting the power didn't make it move. I added setModeRunUsingEncoder()
-        moveDirection = 1; // Record we are moving forward
-        motor.setModeRunUsingEncoder();
-        motor.setPower(INDEX_POWER);
-    }
-
-    /**
-     * Checks the limit switch and updates the current position.
-     * This method now only returns true on the RISING EDGE of the switch press,
-     * preventing it from returning true on multiple consecutive loops.
-     * @return true ONLY on the first loop cycle the switch is detected as pressed.
+     * Main update loop for this logic class. Call this from your Robot's update() method.
      */
-    public boolean spindexerLimitSwitchCheck() {
-        // Your limitSwitchTriggered() method already handles the rising-edge logic.
-        // We can simplify this check significantly.
-        boolean triggeredJustNow = limitSwitchTriggered();
-
-        if (triggeredJustNow) {
-            motor.stop();
-
-            // Use the correct variable: compartmentIndex
-            // Update index based on which way we were going
-            if (moveDirection == 1) {
-                // Moving Forward: Increment index (0 -> 1 -> 2 -> 0)
-                compartmentIndex++;
-                if (compartmentIndex > 2) {
-                    compartmentIndex = 0;
-                }
-            } else if (moveDirection == -1) {
-                // Moving Backward: Decrement index (0 -> 2 -> 1 -> 0)
-                compartmentIndex--;
-                if (compartmentIndex < 0) {
-                    compartmentIndex = 2;
-                }
-            }
-
-            // Reset direction since we are now stopped
-            moveDirection = 0;
-            justIndexed = true; // Signal that a move completed
-
-            opMode.telemetry.addData("Spindexer Reached Pos", compartmentIndex);
-            return true; // The event happened right now!
-        }
-
-        return false; // Not the exact moment of the trigger event.
-    }
-    public int getIntakeCompartment() { return compartmentIndex + 1; }
-    public int getShooterCompartment() { return ((compartmentIndex + 1) % 3) + 1; }
-    public int getNextUpCompartment() { return ((compartmentIndex + 2) % 3) + 1; }
-
+    // In SpindexerIndexerLogic.java
     public void update() {
         limit.update();
-        updateMagnetZero();
+
+        switch (indexerState) {
+            case MOVING:
+                // For normal encoder moves, we just wait for the motor to be done.
+                if (!motor.isBusy()) {
+                    indexerState = IndexerState.FINISHED;
+                }
+                break;
+
+            case REHOMING:
+                // For re-homing moves, we wait for the rising edge of the magnet.
+                if (limit.wasJustTriggered()) {
+                    motor.stop();         // Stop the motor immediately.
+                    motor.resetEncoder(); // Reset the physical encoder to 0.
+                    resetPosition();      // Reset all our software counters (cumulative ticks, etc.).
+                    // We are now at a perfect, drift-free zero.
+                    indexerState = IndexerState.FINISHED;
+                }
+                break;
+
+            // IDLE and FINISHED do nothing.
+            case IDLE:
+            case FINISHED:
+                break;
+        }
+    }
+
+    public int getIntakeCompartment() { return currentTargetCompartment + 1; }
+    public int getShooterCompartment() { return ((currentTargetCompartment + 1) % 3) + 1; }
+    public int getNextUpCompartment() { return ((currentTargetCompartment + 2) % 3) + 1; }
+
+    public boolean isFinished() {
+        return indexerState == IndexerState.IDLE || indexerState == IndexerState.FINISHED;
+    }
+
+    /**
+     * Checks if the spindexer motor is currently moving to a target position.
+     * @return true if the motor is busy, false if it has reached its target.
+     */
+    public boolean isBusy() {
+        // Pass the call through to the underlying motor.
+        return motor.isBusy();
     }
 }

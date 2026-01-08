@@ -4,35 +4,15 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
-import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
-import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
-import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
-
-import kotlin.time.Instant;
 
 @TeleOp()
 public class BlueTelop extends OpMode {
 
-    private static final int LAUNCH_DELAY_MILLISECONDS = 1000;
-
-    protected DumpManager dumpManager;
-    // Class member variables
+   // Class member variables
     private Robot robot;
-    private ColorSensor colorSensor;
-    private IndicatorLight indicator;
-
-
-    // Homing state variables
-    private enum HomingState { HOMING, COMPLETE }
-    private HomingState homingState = HomingState.HOMING;
     private Follower follower;
-    private ManualShootManager manualShootManager;
-
 
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
@@ -43,15 +23,10 @@ public class BlueTelop extends OpMode {
         telemetry.addLine("Initializing...");
 
         robot = new Robot(this);
-        colorSensor = new ColorSensor(hardwareMap, "color_sensor");
-        indicator = new IndicatorLight(hardwareMap, "rgbServo");
-        dumpManager = new DumpManager(this,robot.shooter, robot.door, robot.spindexerLogic,robot.spindexerRotator);
 
         follower = Constants.createFollower(hardwareMap);
         Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
         follower.setPose(startingPose);
-
-        manualShootManager = new ManualShootManager(robot.door, robot.spindexer);
 
         // Initialize all your other robot hardware here
         // example: leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
@@ -70,21 +45,22 @@ public class BlueTelop extends OpMode {
      */
     @Override
     public void init_loop() {
-        if (homingState == HomingState.HOMING) {
+        if (!robot.spindexer.isHomed()) {
             telemetry.addLine("Homing Spindexer...");
 
-            robot.spindexer.setModeRunUsingEncoder();
-            robot.spindexer.setPower(0.5);
+            // Tell the spindexer to start the homing process if it hasn't already.
+            robot.spindexer.startHoming();
 
-            // Check if the magnet is triggered
-            if (robot.spindexerMag.isTriggered()) {
-                robot.spindexer.stop();
-                homingState = HomingState.COMPLETE;
-                telemetry.addLine("Homing Complete. Ready to Start.");
-            }
+            // Run the homing state machine.
+            robot.spindexer.home();
+
+        } else {
+            telemetry.addLine("Homing Complete. Ready to Start.");
         }
-        telemetry.update();
-    }
+
+        // Display the internal state for debugging.
+        telemetry.addData("Spindexer Homing State", robot.spindexer.getHomingState());
+        telemetry.update();    }
 
     /**
      * This method runs ONCE when the driver hits "PLAY".
@@ -95,6 +71,7 @@ public class BlueTelop extends OpMode {
         // You could reset timers here if needed, but it's often empty for TeleOp.
 
     }
+    
 
     /**
      * This method runs in a loop continuously from the moment "PLAY" is pressed until "STOP" is pressed.
@@ -103,16 +80,18 @@ public class BlueTelop extends OpMode {
     @Override
     public void loop() {
         // --- Sensor Updates ---
-        Utilities.isBall(colorSensor, indicator);
-
-        manualShootManager.update(gamepad2.yWasPressed(), dumpManager.isDumping());
+        Utilities.isBall(robot.colorSensor, robot.indicator);
 
         // --- Driver 1: Drivetrain ---
         Utilities.handleRobotCentricDrive(gamepad1, robot);
 
-        // --- Driver 2: Mechanisms ---
-        // The manager Instant.Companion.now handles the toggle logic and the entire state machine.
-        dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
+        // --- Driver 2: Controller ---
+        robot.manualShootManager.update(gamepad2.yWasPressed(), robot.dumpManager.isDumping());
+        robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
+
+        if (gamepad2.aWasPressed()) {
+            robot.spindexerLogic.nextCompartment();
+        }
 
         // Run the main robot update loop
         robot.update();
@@ -148,15 +127,15 @@ public class BlueTelop extends OpMode {
         Pose currentPose = follower.getPose();
         telemetry.addData("Current Pose", "X: %.2f, Y: %.2f, H: %.2f",
                 currentPose.getX(), currentPose.getY(), currentPose.getHeading());
-        telemetry.addData("Dump Mode Active", dumpManager.isDumping());
-        telemetry.addData("Dump State", dumpManager.getState());
+        telemetry.addData("Dump Mode Active", robot.dumpManager.isDumping());
+        telemetry.addData("Dump State", robot.dumpManager.getState());
         telemetry.addData("Intake Comp", robot.spindexer.getIntakeCompartment());
         telemetry.addData("Shooter Comp", robot.spindexer.getShooterCompartment());
         telemetry.addData("Next Up", robot.spindexer.getNextUpCompartment());
         telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
-        telemetry.addData("Detected Color", colorSensor.getBallColor());
-        telemetry.addData("Ball Present", colorSensor.isBallPresent());
-        telemetry.addData("Shoot State", manualShootManager.getState()); // <-- Optional: new telemetry
+        telemetry.addData("Detected Color", robot.colorSensor.getBallColor());
+        telemetry.addData("Ball Present", robot.colorSensor.isBallPresent());
+        telemetry.addData("Shoot State", robot.manualShootManager.getState()); // <-- Optional: new telemetry
         telemetry.update();
     }
 }

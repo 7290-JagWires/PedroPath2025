@@ -173,7 +173,7 @@ public class Utilities {
                             pickupCount++;
                             totalBallCount++;
                             if (totalBallCount < 3) {
-                                spindexerLogic.nextCompartmentAuto();
+                                spindexerLogic.nextCompartment();
                                 pickupState = PickupState.WAITING_FOR_SPIN;
                             } else {
                                 totalBallCount = 0;
@@ -183,8 +183,7 @@ public class Utilities {
                     }
                     break;
                 case WAITING_FOR_SPIN:
-//                    if (spindexerLogic.spindexerLimitSwitchCheckPickup()) {
-                        if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                        if (!spindexerLogic.isBusy()) {
                             pickupTimer.reset();
                             if (pickupCount == 1) {
                                 pickupState = PickupState.FINISHED;
@@ -315,6 +314,11 @@ public class Utilities {
             }
         }
 
+        public void stop() {
+            dumpState = DumpState.IDLE; // **THIS IS THE CRITICAL FIX**
+        }
+
+
         /**
          * Updates the state machine for the pickup process. This method should be called repeatedly in a loop.
          * It manages the transitions between different states of the pickup cycle.
@@ -337,32 +341,32 @@ public class Utilities {
          * </ul>
          */
         public void update() {
+            // Always keep the rotator updated
+            spindexerRotator.update();
+
             switch (dumpState) {
                 case IDLE:
                     break;
                 case SPIN_UP:
                     if (isTeleOpDumping) {
+                        spindexerRotator.start(TOTAL_BALLS_TO_DUMP);
                         dumpState = DumpState.DUMPING;
                     } else if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
+                        spindexerRotator.start(TOTAL_BALLS_TO_DUMP);
                         launchTimer.reset();
                         dumpState = DumpState.DUMPING;
                     }
                     break;
                 case DUMPING:
                     door.forceOpenLock();
-                    if (launchTimer.milliseconds() > LAUNCH_DELAY_MS) {
-                        spindexerLogic.nextCompartment();
-                    }
-                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
-                        dumpCount++;
-                        launchTimer.reset();
-                        if (dumpCount >= TOTAL_BALLS_TO_DUMP) {
-                            dumpState = DumpState.FINISHED;
-                        }
+                    // Wait for the SpindexerRotator to confirm it has finished all 3 rotations
+                    if (spindexerRotator.isFinished()) {
+                        dumpState = DumpState.FINISHED;
                     }
                     break;
                 case FINISHED:
                     // Actions to take once all balls are dumped
+                    stop();
                     break;
             }
         }
@@ -412,7 +416,6 @@ public class Utilities {
                     isTeleOpDumping = false; // Turn off dump mode
 
                     // Reset hardware to a safe state
-                    shooter.stop();
                     door.unlock();
                     door.forceClose();
                 }
@@ -502,7 +505,7 @@ public class Utilities {
 
                 case WAIT_FOR_FIRST_SPIN:
                     // Wait for the hardware to confirm the spin is complete
-                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                    if (!spindexerLogic.isBusy()) {
                         if (rotationsNeeded == 1) {
                             // If we only needed one spin, we are done.
                             rotateState = RotateState.FINISHED;
@@ -524,7 +527,7 @@ public class Utilities {
 
                 case WAIT_FOR_SECOND_SPIN:
                     // Wait for the hardware to confirm the second spin is complete
-                    if (spindexerLogic.spindexerLimitSwitchCheck()) {
+                    if (!spindexerLogic.isBusy()) {
                         rotateState = RotateState.FINISHED;
                     }
                     break;
@@ -557,16 +560,16 @@ public class Utilities {
 
         // 2. Move hardware dependencies here
         private final Door door;
-        private final Spindexer spindexer;
+        private final SpindexerIndexerLogic spindexerLogic;
 
         // 3. Move the timer here
         private final ElapsedTime doorTimer = new ElapsedTime();
         private static final int SERVO_MOVE_TIME_MS = 300;
 
         // 4. Constructor to get the required hardware components
-        public ManualShootManager(Door door, Spindexer spindexer) {
+        public ManualShootManager(Door door, SpindexerIndexerLogic spindexerLogic) {
             this.door = door;
-            this.spindexer = spindexer;
+            this.spindexerLogic = spindexerLogic;
         }
 
         /**
@@ -576,6 +579,9 @@ public class Utilities {
          * @param isDumpModeActive   Whether another action (like auto-dump) is happening.
          */
         public void update(boolean shootButtonPressed, boolean isDumpModeActive) {
+            // Always update the spindexer's internal logic for its own state machine.
+            spindexerLogic.update();
+
             switch (shootState) {
                 case IDLE:
                     // If the button is pressed and we're not busy with another sequence...
@@ -603,7 +609,7 @@ public class Utilities {
                     // Wait again for the servo to close
                     if (doorTimer.milliseconds() > SERVO_MOVE_TIME_MS) {
                         // 1. Advance the spindexer to the next compartment
-                        spindexer.nextCompartment();
+                        spindexerLogic.nextCompartment();
                         // 2. Return to IDLE, ready for the next button press
                         shootState = ShootState.IDLE;
                     }
@@ -611,9 +617,196 @@ public class Utilities {
             }
         }
 
-        // Optional: A getter to see the current state for telemetry
+        /**
+         * Checks if the manager is currently busy with a shooting sequence.
+         */
+        public boolean isShooting() {
+            return shootState != ShootState.IDLE;
+        }
+
         public ShootState getState() {
             return shootState;
+        }
+    }
+    /**
+     * Manages a very simple manual pickup (indexing) action.
+     * When commanded, this class will rotate the spindexer by one compartment and then stop.
+     * This is useful for manual adjustments or loading a single ball without the full intake process.
+     */
+    public static class ManualPickupManager {
+
+        // CORRECTED: A simpler two-state machine is more robust.
+        public enum ManualPickupState { IDLE, WAIT_FOR_SPIN }
+        private ManualPickupState state = ManualPickupState.IDLE;
+
+        private final SpindexerIndexerLogic spindexerLogic;
+
+        /**
+         * Initializes the manager with the spindexer logic controller.
+         * @param spindexerLogic The logic controller for the spindexer.
+         */
+        public ManualPickupManager(SpindexerIndexerLogic spindexerLogic) {
+            this.spindexerLogic = spindexerLogic;
+        }
+
+        /**
+         * The main update loop. Call this every cycle.
+         * @param pickupButtonPressed A rising-edge signal (wasJustPressed) for the pickup button.
+         */
+        public void update(boolean pickupButtonPressed) {
+            // Always update the underlying spindexer logic.
+            spindexerLogic.update();
+
+            switch (state) {
+                case IDLE:
+                    // If the button is pressed, command the spindexer to move and change state.
+                    if (pickupButtonPressed) {
+                        spindexerLogic.nextCompartment();
+                        // Immediately move to the waiting state.
+                        state = ManualPickupState.WAIT_FOR_SPIN;
+                    }
+                    break;
+                // REMOVED the faulty INDEXING state.
+
+                case WAIT_FOR_SPIN:
+                    // Wait for the spindexer to report that its rotation is complete.
+                    // The spindexerLogic is now guaranteed to be "busy" until it's done.
+                    if (spindexerLogic.isFinished()) {
+                        state = ManualPickupState.IDLE;
+                    }
+                    break;
+            }
+        }
+
+        /**
+         * Checks if the manager is currently busy indexing.
+         * @return true if the state is not IDLE.
+         */
+        public boolean isIndexing() {
+            return state != ManualPickupState.IDLE;
+        }
+
+        public ManualPickupState getState() {
+            return state;
+        }
+    }
+    /**
+     * Manages a TeleOp-specific pickup sequence for a single ball.
+     * This manager is designed to be triggered by a button press. It activates the intake
+     * and waits until the color sensor detects a ball. Once a ball is captured, it
+     * automatically indexes the spindexer to the next compartment and then returns to an
+     * idle state, ready for the next button press.
+     *
+     * This manager explicitly does NOT control the shooter motor.
+     */
+    public static class TeleOpPickupManager {
+
+        public enum PickupState {
+            IDLE,           // Waiting for a command
+            START_PICKUP,   // Closing the door and starting the intake
+            WAITING_FOR_BALL, // Intake is running, waiting for the color sensor
+            INDEXING,       // Ball detected, moving the spindexer to the next slot
+            WAIT_FOR_INDEX  // Waiting for the spindexer rotation to finish
+        }
+
+        private PickupState state = PickupState.IDLE;
+
+        // Hardware and Logic Dependencies
+        private final Door door;
+        private final IntakeActive intakeActive;
+        private final SpindexerIndexerLogic spindexerLogic;
+        private final ColorSensor colorSensor;
+        private final IndicatorLight indicator; // For visual feedback
+
+        /**
+         * Initializes the TeleOpPickupManager.
+         * @param door The robot's door mechanism.
+         * @param intakeActive The robot's intake motor.
+         * @param spindexerLogic The logic controller for the spindexer.
+         * @param colorSensor The color sensor used to detect a ball.
+         * @param indicator The indicator light for visual feedback.
+         */
+        public TeleOpPickupManager(Door door, IntakeActive intakeActive, SpindexerIndexerLogic spindexerLogic, ColorSensor colorSensor, IndicatorLight indicator) {
+            this.door = door;
+            this.intakeActive = intakeActive;
+            this.spindexerLogic = spindexerLogic;
+            this.colorSensor = colorSensor;
+            this.indicator = indicator;
+        }
+
+        /**
+         * The main update loop. Call this every cycle from your TeleOp.
+         * @param pickupButtonPressed A rising-edge signal (wasJustPressed) to start the sequence.
+         */
+        public void update(boolean pickupButtonPressed) {
+            // Always update the spindexer's internal logic.
+            spindexerLogic.update();
+
+            switch (state) {
+                case IDLE:
+                    // If the button is pressed and we're not already doing something...
+                    if (pickupButtonPressed) {
+                        state = PickupState.START_PICKUP;
+                    }
+                    break;
+
+                case START_PICKUP:
+                    // 1. Prepare for intake.
+                    door.unlock();
+                    door.forceClose();
+                    intakeActive.intakeOn();
+                    // 2. Move to the next state to wait for the ball.
+                    state = PickupState.WAITING_FOR_BALL;
+                    break;
+
+                case WAITING_FOR_BALL:
+                    // 3. Continuously check for a ball.
+                    // The isBall method also handles the indicator light.
+                    if (Utilities.isBall(colorSensor, indicator)) {
+                        // 4. Ball detected! Turn off the intake and command the indexer.
+                        intakeActive.intakeOff();
+                        spindexerLogic.nextCompartment();
+                        state = PickupState.INDEXING;
+                    }
+                    break;
+
+                case INDEXING:
+                    // This is a transition state. Wait for the spindexer to START moving.
+                    // This prevents us from immediately skipping the wait state.
+                    if (spindexerLogic.isBusy()) {
+                        state = PickupState.WAIT_FOR_INDEX;
+                    }
+                    break;
+
+                case WAIT_FOR_INDEX:
+                    // 5. Wait for the spindexer to finish its rotation.
+                    if (spindexerLogic.isFinished()) {
+                        // 6. Sequence complete. Return to idle.
+                        state = PickupState.IDLE;
+                    }
+                    break;
+            }
+        }
+
+        /**
+         * Call this to forcibly stop the pickup process and turn off the intake.
+         * Useful if the button is released mid-sequence.
+         */
+        public void stop() {
+            intakeActive.intakeOff();
+            state = PickupState.IDLE;
+        }
+
+        /**
+         * Checks if the manager is currently busy with a pickup sequence.
+         * @return true if the state is not IDLE.
+         */
+        public boolean isBusy() {
+            return state != PickupState.IDLE;
+        }
+
+        public PickupState getState() {
+            return state;
         }
     }
 }
