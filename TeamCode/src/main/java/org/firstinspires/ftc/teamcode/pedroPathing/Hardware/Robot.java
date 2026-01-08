@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.MagneticLimitSwitch;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.ManualShootManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.SpindexerRotator;
 
@@ -38,12 +38,12 @@ public class Robot {
     public final Spindexer spindexer;
     public final SpindexerMotor spindexerMotor;
     public final SpindexerIndexerLogic spindexerLogic;
-    public final Utilities.DumpManager dumpManager;
-    public final Utilities.SpindexerRotator spindexerRotator;
+    public final DumpManager dumpManager;
+    public final SpindexerRotator spindexerRotator;
 
-   // public final Utilities.ManualShootManager manualShootManager;
-
+    public final ManualShootManager manualShootManager;
     public final MagneticLimitSwitch spindexerMag;
+
     private static final int TICKS_PER_COMPARTMENT = 1354;//I would leave this in case we need to go back to encoder counting for compartments - AH
 
     public Robot(OpMode opMode) {
@@ -63,6 +63,7 @@ public class Robot {
         spindexerLogic = new SpindexerIndexerLogic(opMode, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
         dumpManager = new DumpManager(opMode, shooter, door, spindexerLogic,spindexerRotator);
+        manualShootManager = new ManualShootManager(door, spindexer);
     }
 
     public void update() {
