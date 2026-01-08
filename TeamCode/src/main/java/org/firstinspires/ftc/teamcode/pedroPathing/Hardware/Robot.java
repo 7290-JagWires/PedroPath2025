@@ -41,6 +41,8 @@ public class Robot {
     public final Utilities.DumpManager dumpManager;
     public final Utilities.SpindexerRotator spindexerRotator;
 
+    public final Utilities.ManualShootManager manualShootManager;
+
     public final MagneticLimitSwitch spindexerMag;
     private static final int TICKS_PER_COMPARTMENT = 1354;//I would leave this in case we need to go back to encoder counting for compartments - AH
 
