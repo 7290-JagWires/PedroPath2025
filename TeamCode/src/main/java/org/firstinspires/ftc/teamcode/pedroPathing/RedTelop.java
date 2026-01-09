@@ -7,26 +7,18 @@ import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.GamepadManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera.TagData;
-import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
-import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 
-import kotlin.time.Instant;
-
-@TeleOp(name = "Blue Telop")
-public class BlueTelop extends OpMode {
+@TeleOp(name = "Red Telop")
+public class RedTelop extends OpMode {
 
     private static final int LAUNCH_DELAY_MILLISECONDS = 1000;
     // Class member variables
     public boolean tagDetectionLogicHasRun = false;
-    private int pipeline = 1;
+    private int pipeline = 2;
     private int startingTagId = -1;
 
     private Robot robot;

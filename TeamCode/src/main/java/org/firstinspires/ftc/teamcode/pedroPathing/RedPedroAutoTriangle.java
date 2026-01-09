@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import java.nio.file.Paths;
 
-@Autonomous(name = "Red Auto Triangle", group = "Pedro")
+@Autonomous(name = "Red Auto Triangle", preselectTeleOp = "Red Telop")
 public class RedPedroAutoTriangle extends BaseAutonomous {
 
     // This class only needs to contain what is UNIQUE to the Red side.

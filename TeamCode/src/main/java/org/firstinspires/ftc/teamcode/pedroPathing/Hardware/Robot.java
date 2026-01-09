@@ -37,7 +37,7 @@ public class Robot {
 
     private static final int TICKS_PER_COMPARTMENT = 1354;//I would leave this in case we need to go back to encoder counting for compartments - AH
 
-    public Robot(OpMode opMode) {
+    public Robot(OpMode opMode, int pipeline) {
         this.opMode = opMode;
 
         driveTrain = new DriveTrain(opMode.hardwareMap);
@@ -60,7 +60,7 @@ public class Robot {
         limelight = new LimelightCamera(opMode.hardwareMap, "limelight");
 
         // Initialize the Limelight
-        limelight.setPipeline(1); // Make sure it's on your AprilTag pipeline  Blue 1 & Red 2
+        limelight.setPipeline(pipeline); // Make sure it's on your AprilTag pipeline  Blue 1 & Red 2
         limelight.start();
     }
 
