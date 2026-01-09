@@ -14,7 +14,7 @@ public class Shooter {
     // Public so other classes can see them (like your Auto op-modes)
     public static final double SHOOTER_OFF_VELOCITY = 0;
     public static final double SHOOT_TRIANGLE_VELOCITY = 2600;
-    public static final double SHOOT_GOAL_VELOCITY = 2100;
+    public static final double SHOOT_GOAL_VELOCITY = 1915;
     public static final double NEGATIVE_VELOCITY = -1000;
 
 

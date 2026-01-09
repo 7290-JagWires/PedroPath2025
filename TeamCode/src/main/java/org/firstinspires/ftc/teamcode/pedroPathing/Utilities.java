@@ -272,8 +272,8 @@ public class Utilities {
         private final SpindexerIndexerLogic spindexerLogic;
         private final SpindexerRotator spindexerRotator; // <-- ADD THIS LINE
         private final OpMode opMode;
-        // Constants
-        private static final int SHOOTER_SPINUP_MS = 2000;
+        // Constant
+        private static final int SHOOTER_SPINUP_MS = 1500;  //2000
         private static final int LAUNCH_DELAY_MS = 400;
         private static final int TOTAL_BALLS_TO_DUMP = 3;
 

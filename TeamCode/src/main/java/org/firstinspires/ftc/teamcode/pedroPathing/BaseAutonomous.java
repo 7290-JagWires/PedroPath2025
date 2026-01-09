@@ -45,6 +45,9 @@ public abstract class BaseAutonomous extends OpMode {
     protected DumpManager dumpManager;
     protected SpindexerRotator spindexerRotator;
 
+    protected ColorSensor colorSensor;
+    protected IndicatorLight indicator;
+
     // State Machine
     public enum PathState {
         DRIVE_START_SCORE, DETECT_TAG_WHILE_DRIVING, WAIT_FOR_SPIN, SCORE_PRELOAD, SCORE1, SCORE2, SCORE3,
@@ -77,8 +80,8 @@ public abstract class BaseAutonomous extends OpMode {
         intakeActive = new IntakeActive(this);
         shooter = new Shooter(this);
         door = new Door(this);
-        ColorSensor colorSensor = new ColorSensor(hardwareMap, "color_sensor");
-        IndicatorLight indicator = new IndicatorLight(hardwareMap, "rgbServo");
+        colorSensor = new ColorSensor(hardwareMap, "color_sensor");
+        indicator = new IndicatorLight(hardwareMap, "rgbServo");
         spindexerMotor = new SpindexerMotor(hardwareMap);
         spindexerMag = new MagneticLimitSwitch(hardwareMap, "magnetic_limit_sensor");
         limelight = new LimelightCamera(hardwareMap, "limelight");
