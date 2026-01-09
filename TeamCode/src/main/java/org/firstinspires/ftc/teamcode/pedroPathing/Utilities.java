@@ -569,7 +569,7 @@ public class Utilities {
 
         // 3. Move the timer here
         private final ElapsedTime doorTimer = new ElapsedTime();
-        private static final int SERVO_MOVE_TIME_MS = 300;
+        private static final int SERVO_MOVE_TIME_MS = 500;
 
         // 4. Constructor to get the required hardware components
         public ManualShootManager(Door door, Spindexer spindexer) {

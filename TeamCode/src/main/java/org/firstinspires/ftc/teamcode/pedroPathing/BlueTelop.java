@@ -28,6 +28,7 @@ public class BlueTelop extends OpMode {
     private enum HomingState { HOMING, COMPLETE }
     private HomingState homingState = HomingState.HOMING;
     private Follower follower;
+    private boolean Ypressed;
 
 
     /**
@@ -72,7 +73,7 @@ public class BlueTelop extends OpMode {
     @Override
     public void start() {
         // You could reset timers here if needed, but it's often empty for TeleOp.
-
+        robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
     }
 
     /**
@@ -81,21 +82,21 @@ public class BlueTelop extends OpMode {
      */
     @Override
     public void loop() {
+        // Run the main robot update loop
+        robot.update();
+
         // --- Sensor Updates ---
         Utilities.isBall(robot.colorSensor, robot.indicator);
 
-        if (gamepad2.rightBumperWasPressed()) {
-            robot.shooter.stopShooter();
-        }
-
-        if (gamepad2.yWasPressed()) {
+        Ypressed = gamepad2.y;
+        if (Ypressed) {
            robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
 ///
 ///             we will need to use distance to toggle between shooting goals and triangles
 ///             this one will be needed if we use the dpad for speeding up and down before shooting
 ///             robot.shooter.setExplicitVelocity(Shooter.SHOOT_TRIANGLE_VELOCITY);
 ///
-           robot.manualShootManager.update(gamepad2.yWasPressed(), robot.dumpManager.isDumping());
+           robot.manualShootManager.update(Ypressed, robot.dumpManager.isDumping());
        }
 
         // --- Driver 1: Drivetrain ---
@@ -105,8 +106,7 @@ public class BlueTelop extends OpMode {
         // The manager Instant.Companion.now handles the toggle logic and the entire state machine.
         robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
 
-        // Run the main robot update loop
-        robot.update();
+
 
         // Handle Manual Rotation forward and back
         if (gamepad2.aWasPressed()) {
@@ -181,6 +181,7 @@ public class BlueTelop extends OpMode {
         telemetry.addData("Detected Color", robot.colorSensor.getBallColor());
         telemetry.addData("Ball Present", robot.colorSensor.isBallPresent());
         telemetry.addData("Shoot State", robot.manualShootManager.getState()); // <-- Optional: new telemetry
+        telemetry.addData("Y Pressed State", Ypressed); // <-- Optional: new telemetry
         telemetry.update();
     }
 }

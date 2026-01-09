@@ -12,7 +12,7 @@ public class Shooter {
 
     // --- Velocity Constants (in Ticks per Second) ---
     // Public so other classes can see them (like your Auto op-modes)
-    public static final double SHOOTER_OFF_VELOCITY = 0.0;
+    public static final double SHOOTER_OFF_VELOCITY = 0;
     public static final double SHOOT_TRIANGLE_VELOCITY = 2600;
     public static final double SHOOT_GOAL_VELOCITY = 2100;
     public static final double NEGATIVE_VELOCITY = -1000;
@@ -33,7 +33,7 @@ public class Shooter {
         shooter.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // Start with the motor off
-        shooter.setVelocity(SHOOT_GOAL_VELOCITY);
+        shooter.setVelocity(SHOOTER_OFF_VELOCITY);
     }
 
     // -------------------------------------------------------------
