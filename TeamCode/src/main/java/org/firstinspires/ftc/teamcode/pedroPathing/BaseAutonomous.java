@@ -25,6 +25,10 @@ public abstract class BaseAutonomous extends OpMode {
     // 1. All COMMON VARIABLES are moved here
     protected Follower follower;
     protected Timer pathTimer, opModeTimer;
+    static final int STARTING_TAG_ID = 23;  //ROBOT LOADED PURPLE SHOOT, PURPLE UP NEXT, GREEN JUST LOADED COMPARTMENTS
+    static final int PICKUP_ROW1_PPG = 23;  //ROBOT LOADED PURPLE SHOOT, PURPLE UP NEXT, GREEN JUST LOADED COMPARTMENTS
+    static final int PICKUP_ROW2_PGP = 22;  //ROBOT LOADED PURPLE SHOOT, PURPLE UP NEXT, GREEN JUST LOADED COMPARTMENTS
+    static final int PICKUP_ROW3_GPP = 21;  //ROBOT LOADED PURPLE SHOOT, PURPLE UP NEXT, GREEN JUST LOADED COMPARTMENTS
     static final double DOOR_TIMER_DELAY = 2.75;
     private static final int TICKS_PER_COMPARTMENT = 1354;
     public boolean tagDetectionLogicHasRun = false;
@@ -152,5 +156,35 @@ public abstract class BaseAutonomous extends OpMode {
 
         // Save this pose to a file using our utility class
         PoseStorage.savePoseToFile(hardwareMap, lastPose);
+    }
+
+    /**
+     * Determines the required spindexer rotation based on the detected AprilTag
+     * and starts the rotation. Assumes a specific preload position.
+     *
+     * @param preloadTagId The ID of the AprilTag that the spindexer is preloaded for.
+     */
+    public void startSpindexerRotationForTag(int preloadTagId) {
+        // Get the tag ID that was detected during the init_loop
+        int detectedTagId = getStartingTagId();
+
+        // Failsafe: If no tag was ever seen during init, default to the preload tag.
+        if (detectedTagId == -1) {
+            detectedTagId = preloadTagId;
+            telemetry.addLine("!!! No Tag Seen, Defaulting to Preload: " + preloadTagId + " !!!");
+        }
+
+        // Calculate how many rotations are needed.
+        // This logic assumes tag IDs are sequential (e.g., 21, 22, 23).
+        // The number of spins is the difference between the target and the preload position.
+        int rotationsNeeded = detectedTagId - preloadTagId;
+
+        // Start the spindexer rotation with the calculated number of steps.
+        // If rotationsNeeded is 0, spindexerRotator.start(0) will do nothing, which is correct.
+        spindexerRotator.start(rotationsNeeded);
+
+        telemetry.addData("Preloaded for Tag", preloadTagId);
+        telemetry.addData("Detected Tag", detectedTagId);
+        telemetry.addData("Spindexer Rotations", rotationsNeeded);
     }
 }

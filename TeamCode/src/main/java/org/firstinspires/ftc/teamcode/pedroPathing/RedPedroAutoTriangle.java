@@ -1,199 +1,250 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
-import com.pedropathing.follower.Follower;
-import com.pedropathing.geometry.BezierLine;
-import com.pedropathing.geometry.Pose;
-import com.pedropathing.paths.PathChain;
-import com.pedropathing.util.Timer;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_TRIANGLE_VELOCITY;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+
+import java.nio.file.Paths;
 
 @Autonomous(name = "Red Auto Triangle", group = "Pedro")
-public class RedPedroAutoTriangle extends OpMode {
-    private Follower follower;
-    private Timer pathTimer, opModeTimer;
+public class RedPedroAutoTriangle extends BaseAutonomous {
 
+    // This class only needs to contain what is UNIQUE to the Red side.
+    private RedPaths paths;
 
-    /* ------ init Poses --------
-    Pedro is based on a 0-144 grid, the same size as the FTC field in inches.
-    0,0 is bottom left corner. each coordinate is 1 inch over.
-    remember, pedro assumes you start at 0,0 CENTRE of your ROBOT
-    initial heading (0) is facing towards goals
-    */
-    /*
-    Think of Poses like a set position on the field. we have several "important" positions to keep track of here
-    so we write them down here.
-     */
-    private final Pose startPose = new Pose(56, 135, Math.toRadians(-90));
-    private final Pose shootPoint = new Pose(56, 126, Math.toRadians(-110));
-    private final Pose pickup1Pose = new Pose(37, 109, Math.toRadians(180));
-    private final Pose endPickup1Pose = new Pose(21, 109, Math.toRadians(180));
-    private final Pose pickup2Pose = new Pose(37, 86, Math.toRadians(180));
-    private final Pose endPickup2Pose = new Pose(21, 86, Math.toRadians(180));
+    // 1. Implement the required abstract methods
+    @Override
+    protected void buildPaths() {
+        // The Red class handles creating the unique paths for the red side
+        paths = new RedPaths(follower);
+        paths.buildPaths();
+    }
 
-
-    // ---------- Paths--------
-    // these are individual names for each of our paths that we will eventually follow/create
-    private PathChain scorePreload, pickup1, endPickup1, score1, pickup2, endPickup2, score2, endPoint;
-
-    public enum PathState {
-        // These are the various states inside of our auto machine.
-        DRIVE_START_SCORE,
-        SCORE_PRELOAD,
-        SCORE1,
-        SCORE2,
-        DRIVE_PICKUP1,
-        DRIVE_PICKUP1_END,
-        DRIVE_PICKUP2,
-        DRIVE_PICKUP2_END,
-        END
-
-
-    };
-    PathState pathState;
-
-    public void buildPaths() {
-        endPoint = follower.pathBuilder() // returns the robot pickup1Pose to end off shooting line
-                .addPath(new BezierLine(shootPoint, pickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
-                .build();
-        scorePreload = follower.pathBuilder() // moves from from start > scoring position
-                .addPath(new BezierLine(startPose, shootPoint))
-                .setLinearHeadingInterpolation(startPose.getHeading(), shootPoint.getHeading())
-                .build();
-        pickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(shootPoint, pickup1Pose))
-                .setLinearHeadingInterpolation(shootPoint.getHeading(), pickup1Pose.getHeading())
-                .build();
-        endPickup1 = follower.pathBuilder() // moves from scoring position  > pickup 1 point, 1/2 speed
-                .addPath(new BezierLine(pickup1Pose, endPickup1Pose))
-                .setLinearHeadingInterpolation(pickup1Pose.getHeading(), pickup1Pose.getHeading())
-                .build();
-        score1 = follower.pathBuilder() // moves from pickup 1 > scoring position
-                .addPath(new BezierLine(endPickup1Pose, shootPoint))
-                .setLinearHeadingInterpolation(endPickup1Pose.getHeading(), shootPoint.getHeading())
-                .build();
-        pickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
-                // use a curve to we can line up better for the balls
-                .addPath(new BezierLine(shootPoint, pickup2Pose))
-                .setLinearHeadingInterpolation( pickup2Pose.getHeading(), pickup2Pose.getHeading())
-                .build();
-        endPickup2 = follower.pathBuilder() // moves from scoring position > pickup 2
-                // use a curve to we can line up better for the balls
-                .addPath(new BezierLine(pickup2Pose, endPickup2Pose))
-                .setLinearHeadingInterpolation(pickup2Pose.getHeading(), endPickup2Pose.getHeading())
-                .build();
-        score2 = follower.pathBuilder() // moves from pickup 2 > scoring position
-                .addPath(new BezierLine(endPickup2Pose, shootPoint))
-                .setLinearHeadingInterpolation(endPickup2Pose.getHeading(), shootPoint.getHeading())
-                .build();
-        }
+    @Override
+    protected void setStartingPose() {
+        // Set the specific starting pose for the red side
+        follower.setPose(RedPaths.startPoseTriangle);
+    }
 
     public void autonomousPathUpdate() {
-        switch(pathState) {
+        shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
+        switch (pathState) {
+            case DRIVE_START_SCORE:
+                // Get the tag ID that was detected during the init_loop
+                // and sort the balls in the correct order
+                startSpindexerRotationForTag(STARTING_TAG_ID);
+
+                // 4. Start driving the path (non-blocking which is the falst command)
+                follower.followPath(paths.scorePreloadTriangle, false);
+                follower.setMaxPower(1);
+
+                // 5. Immediately go to the waiting state.
+                setPathState(PathState.WAIT_FOR_SPIN);
+                break;
+            case WAIT_FOR_SPIN:
+                if (!follower.isBusy() && spindexerRotator.isFinished()) {
+                    dumpManager.start();
+                    setPathState(PathState.SCORE_PRELOAD);
+                }
+                break;
             case SCORE_PRELOAD:
-                //TODO: run standard scoring state machine here
-                if(pathTimer.getElapsedTimeSeconds() > 4 && !follower.isBusy()){
-                    // just scored preload, drive to pickup point 1
-                    follower.followPath(pickup1);
-                    setPathState(PathState.DRIVE_PICKUP1);
+                // This state's job is unchanged: wait for the dumper to finish.
+                if (dumpManager.isFinished()) {
+                    // Preload scored. Move to the next action.
+                    pickupManager.start();
+                    pickupManager.setTotalBallCount(0);
+                    follower.followPath(paths.pickup3Triangle);
+                    setPathState(PathState.DRIVE_PICKUP3);
                 }
                 break;
             case SCORE1:
-                //TODO: run standard scoring state machine here
-                if(pathTimer.getElapsedTimeSeconds() > 5 && !follower.isBusy()){
-                    // scored pickup 1, drive to pickup 2
-                    follower.followPath(pickup2);
-                    follower.setMaxPower(1);
-                    setPathState(PathState.DRIVE_PICKUP2);
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    if (dumpManager.isFinished()) {
+                        if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
+                            // scored pickup 1, drive to pickup 2
+                            pickupManager.start();
+                            pickupManager.setTotalBallCount(0);
+                            follower.followPath(paths.pickup2Triangle);
+                            follower.setMaxPower(1);
+                            setPathState(PathState.DRIVE_PICKUP2);
+                        }
+                    }
                 }
                 break;
             case SCORE2:
-                //TODO: run standard scoring state machine here
-                if(pathTimer.getElapsedTimeSeconds() > 6 && !follower.isBusy()) {
-                    // end state machine
-                    follower.followPath(endPoint);
-                    follower.setMaxPower(1);
-                    setPathState(PathState.END);
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    if (dumpManager.isFinished()) {
+                        shooter.stopShooter();         //Turn off the shooter when we finish auto
+                        if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
+                            // end state machine
+                            follower.followPath(paths.endPointTriangle);
+                            follower.setMaxPower(1);
+                            intakeActive.intakeOff();
+                            setPathState(PathState.END);
+                        }
+                    }
                 }
                 break;
-            case DRIVE_START_SCORE:
-                // drive from start to scoring position
-                follower.followPath(scorePreload, true);
-                follower.setMaxPower(1);
-                setPathState(PathState.SCORE_PRELOAD);
-                break;
-            case DRIVE_PICKUP1_END:
-                if(!follower.isBusy()) {
-                    // picked up at spike 1. drive from pickup1 to score
-                    follower.followPath(score1, true);
-                    follower.setMaxPower(1);
-                    pathState = PathState.SCORE1;
-                }
-                break;
-            case DRIVE_PICKUP2_END:
-                if(!follower.isBusy()) {
-                    // picked up at spike 2. drive from pickup 2 to score
-                    follower.followPath(score2, true);
-                    follower.setMaxPower(1);
-                    pathState = PathState.SCORE2;
+            case SCORE3:
+                if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    if (dumpManager.isFinished()) {
+                        if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
+                            // scored pickup 3, drive to pickup 2
+                            pickupManager.start();
+                            pickupManager.setTotalBallCount(0);
+                            follower.followPath(paths.pickup2);
+                            follower.setMaxPower(1);
+                            setPathState(PathState.DRIVE_PICKUP2);
+                        }
+                    }
                 }
                 break;
             case DRIVE_PICKUP1:
-                // scored. drive to pickup point 1
-                if(!follower.isBusy()) {
-                    follower.followPath(endPickup1);
-                    follower.setMaxPower(.3);
-                    pathState = PathState.DRIVE_PICKUP1_END;
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.pickup1Ball2);
+                    follower.setMaxPower(1);
+                    pathState = PathState.DRIVE_PICKUP1BALL2_END;
+                }
+                break;
+            case DRIVE_PICKUP1BALL2_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.pickup1Ball3, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP1BALL3_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP1BALL3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.endPickup1, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP1_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP1_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW1_PPG);
+
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score1Triangle, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE1;
+                        intakeActive.intakeOff();
+                        dumpManager.start();
+                    }
                 }
                 break;
             case DRIVE_PICKUP2:
-                // scored, drive to pickup point 2
-                if(!follower.isBusy()) {
-                    follower.followPath(endPickup2);
-                    follower.setMaxPower(.3);
-                    pathState = PathState.DRIVE_PICKUP2_END;
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.pickup2Ball2);
+                    follower.setMaxPower(1);
+                    pathState = PathState.DRIVE_PICKUP2BALL2_END;
                 }
                 break;
+            case DRIVE_PICKUP2BALL2_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.pickup2Ball3, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP2BALL3_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP2BALL3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.endPickup2, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP2_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP2_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW2_PGP);
 
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score2Triangle, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE2;
+                        intakeActive.intakeOff();
+                        dumpManager.start();
+                    }
+                }
+                break;
+            case DRIVE_PICKUP3:
+                if (!follower.isBusy()) {
+                    follower.followPath(paths.pickup3Ball2);
+                    follower.setMaxPower(1);
+                    pathState = PathState.DRIVE_PICKUP3BALL2_END;
+                }
+                break;
+            case DRIVE_PICKUP3BALL2_END:
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.pickup3Ball3, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP3BALL3_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP3BALL3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.endPickup3, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.DRIVE_PICKUP3_END;
+                        pickupManager.start(); // Restart for the next pickup
+                    }
+                }
+                break;
+            case DRIVE_PICKUP3_END:
+                pickupManager.update(); // Make sure SM is running
+                if (pickupManager.isFinished()) { // Check state with the new method
+                    if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW3_GPP);
+
+
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score3Triangle, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE3;
+                        intakeActive.intakeOff();
+                        dumpManager.start();
+                    }
+                }
+                break;
             default:
                 break;
         }
     }
-
-    public void setPathState(PathState newState){
-        pathState = newState;
-        pathTimer.resetTimer();
-    }
-    @Override
-    public void init() {
-        // set initial state
-        pathState = PathState.DRIVE_START_SCORE;
-        pathTimer = new Timer();
-        opModeTimer = new Timer();
-        opModeTimer.resetTimer();
-        follower = Constants.createFollower(hardwareMap);
-        //TODO: add in any other Init statements here for other hardware, shooters, etc.
-        buildPaths();
-        follower.setStartingPose(startPose);
-    }
-
-    public void start() {
-        opModeTimer.resetTimer();
-        setPathState(pathState); // update state machine with starting state
-    }
-
-    @Override
-    public void loop() {
-        // update state machine + odometry
-        follower.update();
-        autonomousPathUpdate();
-        // give data back to drivers
-        telemetry.addData("path state", pathState.toString());
-        telemetry.addData("x", follower.getPose().getX());
-        telemetry.addData("y", follower.getPose().getY());
-        telemetry.addData("heading", follower.getPose().getHeading());
-        telemetry.addData("Path time", pathTimer.getElapsedTimeSeconds());
-    }
 }
-

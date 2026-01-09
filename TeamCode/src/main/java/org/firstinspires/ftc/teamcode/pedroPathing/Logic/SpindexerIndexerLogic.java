@@ -98,7 +98,6 @@ public class SpindexerIndexerLogic {
         // I think the biggest problem was the motor was set to the RunToPosition mode
         // so setting the power didn't make it move. I added setModeRunUsingEncoder()
         moveDirection = 1; // Record we are moving forward
-        motor.setModeRunUsingEncoder();
         motor.setPower(INDEX_POWER);
     }
 
@@ -107,15 +106,7 @@ public class SpindexerIndexerLogic {
      **/
     public void previousCompartment() {
         moveDirection = -1; // Record we are moving backward
-        motor.setModeRunUsingEncoder();
         motor.setPower(-INDEX_POWER); // Use negative power to move in reverse
-    }
-    public void nextCompartmentAuto() {
-        // I think the biggest problem was the motor was set to the RunToPosition mode
-        // so setting the power didn't make it move. I added setModeRunUsingEncoder()
-        moveDirection = 1; // Record we are moving forward
-        motor.setModeRunUsingEncoder();
-        motor.setPower(INDEX_POWER);
     }
 
     /**

@@ -172,7 +172,7 @@ public class Utilities {
                             pickupCount++;
                             totalBallCount++;
                             if (totalBallCount < 3) {
-                                spindexerLogic.nextCompartmentAuto();
+                                spindexerLogic.nextCompartment();
                                 pickupState = PickupState.WAITING_FOR_SPIN;
                             } else {
                                 totalBallCount = 0;

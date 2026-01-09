@@ -4,8 +4,6 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
-
 @Autonomous(name = "Blue Auto Goal", group = "Pedro")
 public class BluePedroAutoGoal extends BaseAutonomous {
 
@@ -31,25 +29,8 @@ public class BluePedroAutoGoal extends BaseAutonomous {
         switch (pathState) {
             case DRIVE_START_SCORE:
                 // Get the tag ID that was detected during the init_loop
-                int detectedTagId = getStartingTagId();
-
-                // Failsafe: If no tag was ever seen, default to one. 23 is our preload
-                if (detectedTagId == -1) {
-                    detectedTagId = 23; // Default to Right Tag
-                    telemetry.addLine("!!! No Tag Seen During Init, Defaulting to 23 !!!");
-                }
-
-                // ASSUMING WE preload for TAG_ID 23
-                if (detectedTagId == 21) { // Left Tag
-                    // Preloaded for 23, need Left. Spin 2 times.
-                    spindexerRotator.start(2);
-                } else if (detectedTagId == 22) { // Center Tag
-                    // Preloaded for 23, need Center. Spin 1 time.
-                    spindexerRotator.start(1);
-                } else { // Tag is 23 (our preload)
-                    // Preloaded for 23, need Right. Do nothing.
-                    spindexerRotator.start(0);
-                }
+                // and sort the balls in the correct order
+                startSpindexerRotationForTag(STARTING_TAG_ID);
 
                 // 4. Start driving the path (non-blocking which is the falst command)
                 follower.followPath(paths.scorePreload, false);
@@ -97,7 +78,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                             follower.followPath(paths.endPoint);
                             follower.setMaxPower(1);
                             intakeActive.intakeOff();
-//                            setPathState(PathState.END);
+                            setPathState(PathState.END);
                         }
                     }
                 }
@@ -128,7 +109,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.pickup1Ball3, true);
+                        follower.followPath(paths.pickup1Ball3, false);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP1BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -140,7 +121,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.endPickup1, true);
+                        follower.followPath(paths.endPickup1, false);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP1_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -151,8 +132,12 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 pickupManager.update(); // Make sure SM is running
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW1_PPG);
+
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.score1, true);
+                        follower.followPath(paths.score1, false);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE1;
                         intakeActive.intakeOff();
@@ -172,7 +157,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.pickup2Ball3, true);
+                        follower.followPath(paths.pickup2Ball3, false);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -184,7 +169,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.endPickup2, true);
+                        follower.followPath(paths.endPickup2, false);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -195,8 +180,12 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 pickupManager.update(); // Make sure SM is running
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW2_PGP);
+
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.score2, true);
+                        follower.followPath(paths.score2, false);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE2;
                         intakeActive.intakeOff();
@@ -215,7 +204,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.pickup3Ball3, true);
+                        follower.followPath(paths.pickup3Ball3, false);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP3BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -227,7 +216,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.endPickup3, true);
+                        follower.followPath(paths.endPickup3, false);
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP3_END;
                         pickupManager.start(); // Restart for the next pickup
@@ -238,8 +227,13 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 pickupManager.update(); // Make sure SM is running
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW3_GPP);
+
+
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.score3, true);
+                        follower.followPath(paths.score3, false);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE3;
                         intakeActive.intakeOff();

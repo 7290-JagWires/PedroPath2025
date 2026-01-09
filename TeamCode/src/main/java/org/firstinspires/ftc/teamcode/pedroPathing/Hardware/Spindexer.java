@@ -14,7 +14,6 @@ public class Spindexer {
     private final MagneticLimitSwitch limit;
 
     // constants
-
     public static final int COMPARTMENTS = 3;
     public static final int TICKS_PER_REV = 4063;
     public static final int TICKS_PER_COMPARTMENT = TICKS_PER_REV / COMPARTMENTS;
@@ -56,25 +55,6 @@ public class Spindexer {
 
     public void setModeRunUsingEncoder() {
         motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
-    }
-
-    /**  Spindexer starts moving to the next compartment. You must also call
-     spinderLimitSwitchCheck() in the main loop so it stops when the limit switch is triggered
-     **/
-    public void nextCompartment() {
-        // I think the biggest problem was the motor was set to the RunToPosition mode
-        // so setting the power didn't make it move. I added setModeRunUsingEncoder()
-        moveDirection = 1; // Record we are moving forward
-        runUsingEncoder();
-        motor.setPower(INDEX_POWER);
-    }
-
-    public void previousCompartment() {
-
-        moveDirection = -1; // Record we are moving backward
-        runUsingEncoder();;
-        // reverse direction
-        motor.setPower(-INDEX_POWER);
     }
 
     public void stop() {
