@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.Hardware;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.LLResultTypes;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
@@ -14,8 +15,8 @@ public class LimelightCamera {
     private Limelight3A limelight;
 
     // Camera mounting parameters - these are specific to your robot's physical setup
-    private static final double LIMELIGHT_MOUNT_ANGLE_DEGREES = 19.83;
-    private static final double LIMELIGHT_LENS_HEIGHT_INCHES = 9.50;
+    private static final double LIMELIGHT_MOUNT_ANGLE_DEGREES = 0; //OLD Mount19.83;
+    private static final double LIMELIGHT_LENS_HEIGHT_INCHES = 9.25;
     private static final boolean IS_LIMELIGHT_INVERTED = true;
     private static final int GPP = 21;
     private static final int PGP = 22;
@@ -99,6 +100,31 @@ public class LimelightCamera {
     }
 
     /**
+     * Processes the latest Limelight result to find the primary AprilTag and returns its data.
+     * This combines getting the result, checking for validity, and calculating distance.
+     *
+     * @return A {@link TagData} object containing the tag's info, or {@code null} if no tag is found.
+     */
+    public TagData getAprilTagData() {
+        LLResult result = getLatestResult();
+
+        // Check if the result is valid and has detected any fiducial tags
+        if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
+
+            // Look at the first tag detected
+            LLResultTypes.FiducialResult tag = result.getFiducialResults().get(0);
+
+            // Calculate the distance to the tag
+            double distance = getDistanceToTarget(result, GOAL_TAG_HEIGHT);
+
+            // Create and return a new TagData object with all the information
+            return new TagData(tag.getFiducialId(), distance, result.getTx(), result.getTy());
+        }
+
+        // If no valid tag is found, return null
+        return null;
+    }
+    /**
      * Calculates the horizontal distance to a target based on its height and the camera's vertical angle.
      *
      * @param result         The LLResult containing the target data.
@@ -134,5 +160,24 @@ public class LimelightCamera {
             return distanceToTargetInches;
         }
     }
+    /**
+     * A simple data class to hold the processed information from a detected AprilTag.
+     * This is a "public static nested class", which allows it to be public
+     * while still living inside the LimelightCamera.java file.
+     */
+    public static class TagData {
+        public final int id;
+        public final double distance;
+        public final double tx; // Horizontal angle
+        public final double ty; // Vertical angle
+
+        public TagData(int id, double distance, double tx, double ty) {
+            this.id = id;
+            this.distance = distance;
+            this.tx = tx;
+            this.ty = ty;
+        }
+    }
 }
+
 

@@ -32,6 +32,8 @@ public class Robot {
 
     public final ManualShootManager manualShootManager;
     public final MagneticLimitSwitch spindexerMag;
+    public final LimelightCamera limelight; // Make sure to add your LimelightCamera
+
 
     private static final int TICKS_PER_COMPARTMENT = 1354;//I would leave this in case we need to go back to encoder counting for compartments - AH
 
@@ -53,6 +55,13 @@ public class Robot {
         spindexerRotator = new SpindexerRotator(spindexerLogic);
         dumpManager = new DumpManager(opMode, shooter, door, spindexerLogic,spindexerRotator);
         manualShootManager = new ManualShootManager(door, spindexer);
+
+        // *** FIX 1: INITIALIZE THE LIMELIGHT CAMERA ***
+        limelight = new LimelightCamera(opMode.hardwareMap, "limelight");
+
+        // Initialize the Limelight
+        limelight.setPipeline(1); // Make sure it's on your AprilTag pipeline  Blue 1 & Red 2
+        limelight.start();
     }
 
     public void update() {

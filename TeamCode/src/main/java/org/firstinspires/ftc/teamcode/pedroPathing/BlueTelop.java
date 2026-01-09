@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_GOAL_VELOCITY;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_TRIANGLE_VELOCITY;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
@@ -8,8 +9,11 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.GamepadManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera.TagData;
 import org.firstinspires.ftc.teamcode.pedroPathing.PoseStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities.DumpManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
@@ -20,16 +24,20 @@ import kotlin.time.Instant;
 public class BlueTelop extends OpMode {
 
     private static final int LAUNCH_DELAY_MILLISECONDS = 1000;
-
     // Class member variables
-    private Robot robot;
+    public boolean tagDetectionLogicHasRun = false;
+    private int startingTagId = -1;
 
+    private Robot robot;
     // Homing state variables
-    private enum HomingState { HOMING, COMPLETE }
-    private HomingState homingState = HomingState.HOMING;
+    private enum HomingState { IDLE, HOMING, COMPLETE }
+    private HomingState homingState = HomingState.IDLE;
     private Follower follower;
     private boolean Ypressed;
 
+    private GamepadManager gamepadManager1;
+    private GamepadManager gamepadManager2;
+    private TagData detectedTag;
 
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
@@ -37,16 +45,21 @@ public class BlueTelop extends OpMode {
      */
     @Override
     public void init() {
-        telemetry.addLine("Initializing...");
-
         robot = new Robot(this);
 
         follower = Constants.createFollower(hardwareMap);
         Pose startingPose = PoseStorage.loadPoseFromFile(hardwareMap);
         follower.setPose(startingPose);
 
-        // Initialize all your other robot hardware here
-        // example: leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
+        // Initialize the GamepadManagers
+        gamepadManager1 = new GamepadManager();
+        gamepadManager2 = new GamepadManager();
+
+        // Start the homing process on init
+        homingState = HomingState.HOMING;
+
+        tagDetectionLogicHasRun = false;
+        startingTagId = -1; // Reset the tag ID at the beginning of every init
 
         telemetry.addLine("TeleOp Initialized");
         telemetry.addData("Pose Loaded From Auto", "X: %.2f, Y: %.2f, H: %.2f",
@@ -82,55 +95,68 @@ public class BlueTelop extends OpMode {
      */
     @Override
     public void loop() {
+        // --- UPDATE HELPERS (Call these at the top of the loop!) ---
+        gamepadManager1.update(gamepad1); // Update button states for gamepad 1
+        gamepadManager2.update(gamepad2); // Update button states for gamepad 2
+
         // Run the main robot update loop
         robot.update();
 
-        // --- Sensor Updates ---
-        Utilities.isBall(robot.colorSensor, robot.indicator);
-
-        Ypressed = gamepad2.y;
-        if (Ypressed) {
-           robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
-///
-///             we will need to use distance to toggle between shooting goals and triangles
-///             this one will be needed if we use the dpad for speeding up and down before shooting
-///             robot.shooter.setExplicitVelocity(Shooter.SHOOT_TRIANGLE_VELOCITY);
-///
-           robot.manualShootManager.update(Ypressed, robot.dumpManager.isDumping());
-       }
-
-        // --- Driver 1: Drivetrain ---
-        Utilities.handleRobotCentricDrive(gamepad1, robot);
-
-        // --- Driver 2: Mechanisms ---
-        // The manager Instant.Companion.now handles the toggle logic and the entire state machine.
-        robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
-
-
-
-        // Handle Manual Rotation forward and back
-        if (gamepad2.aWasPressed()) {
-            robot.spindexerRotator.start(1);  //we now rotate one compartment
-        }
-
-        if (gamepad2.bWasPressed()) {
-            robot.spindexerLogic.previousCompartment();  //we now rotate one compartment backwards
-        }
-
-        //Handle a manual homing
-        if (gamepad2.xWasPressed()) {
-            homingState = HomingState.HOMING;
-            handleHoming();
-        }
-
-        // Auto-close door after indexing
-        if (robot.spindexer.justIndexed) {
-            robot.door.forceClose();
-            robot.spindexer.justIndexed = false;
-        }
-
         // IMPORTANT: Update the follower in every loop cycle to track position
         follower.update();
+
+        //Limelight updates
+        detectedTag = robot.limelight.getAprilTagData();
+
+        // --- Main State Machine ---
+        // If we are currently homing, block all other actions and continue homing.
+        if (homingState == HomingState.HOMING) {
+            handleHoming();
+        } else {
+            // --- Driver 1: Drivetrain ---
+            Utilities.handleRobotCentricDrive(gamepad1, robot);
+
+            // --- Driver 2: Mechanisms ---
+            Utilities.isBall(robot.colorSensor, robot.indicator);
+
+            // Shooter Controls
+            // Use d-pad up/down to toggle between default shooting velocities
+            if (gamepadManager2.dpad_up_just_pressed) {
+                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);        }
+            if (gamepadManager2.dpad_down_just_pressed) {
+                robot.shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
+            }
+
+            if (gamepadManager2.y_just_pressed) {
+                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
+                robot.manualShootManager.update(true, robot.dumpManager.isDumping());
+            } else {
+                // IMPORTANT: Always call update, passing 'false' when the button isn't newly pressed.
+                robot.manualShootManager.update(false, robot.dumpManager.isDumping());
+            }
+
+            //Dump Controls
+            robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
+
+            // Spindexer Manual Rotation
+            if (gamepadManager2.a_just_pressed) {
+                robot.spindexerRotator.start(1);  // Rotate one compartment forward
+            }
+            if (gamepadManager2.b_just_pressed) {
+                robot.spindexer.previousCompartment(); // Rotate one compartment backward
+            }
+
+            // Manual Re-Homing
+            if (gamepadManager2.x_just_pressed) {
+                homingState = HomingState.HOMING;
+            }
+
+            // Auto-close door after indexing
+            if (robot.spindexer.justIndexed) {
+                robot.door.forceClose();
+                robot.spindexer.justIndexed = false;
+            }
+        }
 
         // --- Telemetry ---
         updateTelemetry();
@@ -181,7 +207,17 @@ public class BlueTelop extends OpMode {
         telemetry.addData("Detected Color", robot.colorSensor.getBallColor());
         telemetry.addData("Ball Present", robot.colorSensor.isBallPresent());
         telemetry.addData("Shoot State", robot.manualShootManager.getState()); // <-- Optional: new telemetry
-        telemetry.addData("Y Pressed State", Ypressed); // <-- Optional: new telemetry
+
+        // Check if a tag was found
+        if (detectedTag != null) {
+            // Now you have all the data in a clean object!
+            telemetry.addData("Tag ID", detectedTag.id);
+            telemetry.addData("Angle to Camera (deg) (Tx)", "%.2f", detectedTag.tx);
+            telemetry.addData("Angle from camera to center of Target (Ty)", "%.2f", detectedTag.ty);
+            telemetry.addData("Exact distance from camera to tag", "%.2f", detectedTag.distance);
+        } else {
+            telemetry.addLine("No tags in view");
+        }
         telemetry.update();
     }
 }
