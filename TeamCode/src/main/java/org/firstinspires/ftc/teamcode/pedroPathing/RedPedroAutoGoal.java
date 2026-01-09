@@ -95,7 +95,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                             follower.followPath(paths.endPoint);
                             follower.setMaxPower(1);
                             intakeActive.intakeOff();
-                            setPathState(PathState.END);
+//                            setPathState(PathState.END);
                         }
                     }
                 }

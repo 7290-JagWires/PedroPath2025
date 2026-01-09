@@ -17,22 +17,22 @@ public class BluePaths {
     // Poses can be public and static so they can be accessed from anywhere
     public static final Pose startPose = new Pose(17, 115, Math.toRadians(25));
     public static final Pose startPoseTriangle = new Pose(56, 9, Math.toRadians(90));
-    public static final Pose shootPoint = new Pose(59, 85, Math.toRadians(145));
-    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(120));
+    public static final Pose shootPoint = new Pose(59, 97, Math.toRadians(152));
+    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(121));
 
     //Common poses for all programs
-    public static final Pose pickup1Pose = new Pose(37, 82, Math.toRadians(180));
-    public static final Pose pickup1Pose2 = new Pose(32, 82, Math.toRadians(180));
-    public static final Pose pickup1Pose3 = new Pose(27, 82, Math.toRadians(180));
-    public static final Pose endPickup1Pose = new Pose(21, 82, Math.toRadians(180));
-    public static final Pose pickup2Pose = new Pose(37, 59, Math.toRadians(180));
-    public static final Pose pickup2Pose2 = new Pose(32, 59, Math.toRadians(180));
-    public static final Pose pickup2Pose3 = new Pose(27, 59, Math.toRadians(180));
-    public static final Pose endPickup2Pose = new Pose(21, 59, Math.toRadians(180));
-    public static final Pose pickup3Pose = new Pose(37, 37, Math.toRadians(180));
-    public static final Pose pickup3Pose2 = new Pose(32, 37, Math.toRadians(180));
-    public static final Pose pickup3Pose3 = new Pose(27, 37, Math.toRadians(180));
-    public static final Pose endPickup3Pose = new Pose(21, 37, Math.toRadians(180));
+    public static final Pose pickup1Pose = new Pose(42, 82, Math.toRadians(180));
+    public static final Pose pickup1Pose2 = new Pose(35, 82, Math.toRadians(180));
+    public static final Pose pickup1Pose3 = new Pose(31, 82, Math.toRadians(180));
+    public static final Pose endPickup1Pose = new Pose(26, 82, Math.toRadians(180));
+    public static final Pose pickup2Pose = new Pose(50, 58, Math.toRadians(180));
+    public static final Pose pickup2Pose2 = new Pose(37, 58, Math.toRadians(180));
+    public static final Pose pickup2Pose3 = new Pose(32, 58, Math.toRadians(180));
+    public static final Pose endPickup2Pose = new Pose(20, 58, Math.toRadians(180));
+    public static final Pose pickup3Pose = new Pose(45, 35, Math.toRadians(180));
+    public static final Pose pickup3Pose2 = new Pose(36, 35, Math.toRadians(180));
+    public static final Pose pickup3Pose3 = new Pose(31, 35, Math.toRadians(180));
+    public static final Pose endPickup3Pose = new Pose(20, 35, Math.toRadians(180));
 
 
 

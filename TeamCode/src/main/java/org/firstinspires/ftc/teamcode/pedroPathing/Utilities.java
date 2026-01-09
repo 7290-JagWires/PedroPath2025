@@ -97,7 +97,7 @@ public class Utilities {
         // Timers
         private final ElapsedTime pickupTimer = new ElapsedTime();
 
-        private static final int LAUNCH_DELAY_MS = 500; // Example delay
+        private static final int LAUNCH_DELAY_MS = 400; // Example delay
 
         /**
          * Initializes the PickupManager with all the necessary hardware components and logic modules.
@@ -273,7 +273,7 @@ public class Utilities {
         private final SpindexerRotator spindexerRotator; // <-- ADD THIS LINE
         private final OpMode opMode;
         // Constant
-        private static final int SHOOTER_SPINUP_MS = 1500;  //2000
+        private static final int SHOOTER_SPINUP_MS = 1700;  //2000
         private static final int LAUNCH_DELAY_MS = 400;
         private static final int TOTAL_BALLS_TO_DUMP = 3;
 
