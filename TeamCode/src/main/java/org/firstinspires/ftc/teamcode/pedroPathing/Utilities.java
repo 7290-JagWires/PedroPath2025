@@ -565,16 +565,16 @@ public class Utilities {
 
         // 2. Move hardware dependencies here
         private final Door door;
-        private final Spindexer spindexer;
+        private final  SpindexerIndexerLogic spindexerIndexerLogic;
 
         // 3. Move the timer here
         private final ElapsedTime doorTimer = new ElapsedTime();
         private static final int SERVO_MOVE_TIME_MS = 500;
 
         // 4. Constructor to get the required hardware components
-        public ManualShootManager(Door door, Spindexer spindexer) {
+        public ManualShootManager(Door door, SpindexerIndexerLogic spindexerIndexerLogic) {
             this.door = door;
-            this.spindexer = spindexer;
+            this.spindexerIndexerLogic = spindexerIndexerLogic;
         }
 
         /**
@@ -611,7 +611,7 @@ public class Utilities {
                     // Wait again for the servo to close
                     if (doorTimer.milliseconds() > SERVO_MOVE_TIME_MS) {
                         // 1. Advance the spindexer to the next compartment
-                        spindexer.nextCompartment();
+                        spindexerIndexerLogic.nextCompartment();
                         // 2. Return to IDLE, ready for the next button press
                         shootState = ShootState.IDLE;
                     }
