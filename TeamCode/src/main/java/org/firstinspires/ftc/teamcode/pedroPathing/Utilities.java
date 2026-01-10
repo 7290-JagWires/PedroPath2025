@@ -562,23 +562,28 @@ public class Utilities {
             CLOSING_DOOR   // The door is closing
         }
         private ShootState shootState = ShootState.IDLE;
+        private SpindexerIndexerLogic spindexerLogic;
 
         // 2. Move hardware dependencies here
         private final Door door;
-        private final  SpindexerIndexerLogic spindexerIndexerLogic;
+        private final SpindexerRotator spindexerRotator; // Add this new field at the top of the class
 
         // 3. Move the timer here
         private final ElapsedTime doorTimer = new ElapsedTime();
         private static final int SERVO_MOVE_TIME_MS = 500;
 
         // 4. Constructor to get the required hardware components
-        public ManualShootManager(Door door, SpindexerIndexerLogic spindexerIndexerLogic) {
+        public ManualShootManager(Door door, SpindexerIndexerLogic spindexerLogic, SpindexerRotator spindexerRotator) {
             this.door = door;
-            this.spindexerIndexerLogic = spindexerIndexerLogic;
+            this.spindexerLogic = spindexerLogic;
+            this.spindexerRotator = spindexerRotator;
         }
 
-        /**
+
+         /**
          * The main update loop for the manual shoot state machine.
+
+
          * Call this in every loop of your OpMode.
          * @param shootButtonPressed Whether the shoot button is currently pressed.
          * @param isDumpModeActive   Whether another action (like auto-dump) is happening.
@@ -611,7 +616,7 @@ public class Utilities {
                     // Wait again for the servo to close
                     if (doorTimer.milliseconds() > SERVO_MOVE_TIME_MS) {
                         // 1. Advance the spindexer to the next compartment
-                        spindexerIndexerLogic.nextCompartment();
+                        spindexerLogic.nextCompartment();;
                         // 2. Return to IDLE, ready for the next button press
                         shootState = ShootState.IDLE;
                     }

@@ -54,7 +54,7 @@ public class Robot {
         spindexerLogic = new SpindexerIndexerLogic(opMode, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
         dumpManager = new DumpManager(opMode, shooter, door, spindexerLogic,spindexerRotator);
-        manualShootManager = new ManualShootManager(door, spindexerLogic);
+        manualShootManager = new ManualShootManager(door, spindexerLogic, spindexerRotator);
 
         // *** FIX 1: INITIALIZE THE LIMELIGHT CAMERA ***
         limelight = new LimelightCamera(opMode.hardwareMap, "limelight");
