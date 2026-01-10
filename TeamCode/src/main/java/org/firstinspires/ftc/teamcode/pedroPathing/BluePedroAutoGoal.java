@@ -101,6 +101,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup1Ball2);
                     follower.setMaxPower(1);
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     pathState = PathState.DRIVE_PICKUP1BALL2_END;
                 }
                 break;
@@ -114,7 +115,20 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP1BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
-                }
+                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW1_PPG);
+
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score1, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE1;
+                        intakeActive.intakeOff();
+                        dumpManager.start();
+                    }
+            }
                 break;
             case DRIVE_PICKUP1BALL3_END:
                 pickupManager.update(); // Make sure SM is running
@@ -125,6 +139,19 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP1_END;
                         pickupManager.start(); // Restart for the next pickup
+                    }
+                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW1_PPG);
+
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score1, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE1;
+                        intakeActive.intakeOff();
+                        dumpManager.start();
                     }
                 }
                 break;
@@ -149,6 +176,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup2Ball2);
                     follower.setMaxPower(1);
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     pathState = PathState.DRIVE_PICKUP2BALL2_END;
                 }
                 break;
@@ -162,6 +190,17 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP2BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW2_PGP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score2, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE2;
+                    intakeActive.intakeOff();
+                    dumpManager.start();
                 }
                 break;
             case DRIVE_PICKUP2BALL3_END:
@@ -191,12 +230,24 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         intakeActive.intakeOff();
                         dumpManager.start();
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW2_PGP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score2, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE2;
+                    intakeActive.intakeOff();
+                    dumpManager.start();
                 }
                 break;
             case DRIVE_PICKUP3:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup3Ball2);
                     follower.setMaxPower(1);
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     pathState = PathState.DRIVE_PICKUP3BALL2_END;
                 }
                 break;
@@ -209,6 +260,17 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP3BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW3_GPP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score3, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE3;
+                    intakeActive.intakeOff();
+                    dumpManager.start();
                 }
                 break;
             case DRIVE_PICKUP3BALL3_END:
@@ -221,6 +283,17 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW3_GPP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score3, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE3;
+                    intakeActive.intakeOff();
+                    dumpManager.start();
                 }
                 break;
             case DRIVE_PICKUP3_END:
@@ -230,7 +303,6 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         // Get the tag ID that was detected during the init_loop
                         // and sort the balls in the correct order
                         startSpindexerRotationForTag(PICKUP_ROW3_GPP);
-
 
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.score3, false);

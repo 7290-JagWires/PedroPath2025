@@ -69,6 +69,7 @@ public class Robot {
         spindexer.update();
         intakeActive.run();
         dumpManager.update();
+        spindexerLogic.update();
         spindexerRotator.update();
     }
 

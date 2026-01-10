@@ -25,7 +25,7 @@ public class LimelightCamera {
 
     // Constants for known target heights
     public static final double OBELISK_HEIGHT = 19.50;
-    public static final double GOAL_TAG_HEIGHT = 32.75;
+    public static final double GOAL_TAG_HEIGHT = 29.5;
 
 
     /**

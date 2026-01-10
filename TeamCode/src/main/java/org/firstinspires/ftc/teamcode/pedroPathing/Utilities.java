@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_DEFENSE_VELOCITY;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_GOAL_VELOCITY;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_TRIANGLE_VELOCITY;
+
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.IndicatorLight;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
@@ -627,6 +632,30 @@ public class Utilities {
         // Optional: A getter to see the current state for telemetry
         public ShootState getState() {
             return shootState;
+        }
+    }
+
+    /**
+     * Automatically adjusts the shooter's velocity based on the distance to a detected AprilTag.
+     * It provides a default velocity if no tag is visible.
+     *
+     * @param robot The main Robot object, which contains the shooter.
+     * @param detectedTag The TagData object from the Limelight camera. Can be null.
+     */
+    public static void updateShooterVelocityBasedOnDistance(Robot robot, LimelightCamera.TagData detectedTag) {
+        if (detectedTag != null) {
+            // If a tag is visible, adjust velocity based on its distance
+            if (detectedTag.distance <= 50) {
+                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
+            } else if (detectedTag.distance >= 100) {
+                robot.shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
+            } else {
+                // If the tag is at a medium distance, use the defense velocity
+                robot.shooter.setExplicitVelocity(SHOOT_DEFENSE_VELOCITY);
+            }
+        } else {
+            // If no tag is visible, default to the standard goal velocity
+            robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
         }
     }
 }

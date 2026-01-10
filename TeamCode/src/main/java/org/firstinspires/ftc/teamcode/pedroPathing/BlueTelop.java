@@ -1,7 +1,10 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOTER_ADJUSTMENT_VELOCITY;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_DEFENSE_VELOCITY;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_GOAL_VELOCITY;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_TRIANGLE_VELOCITY;
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.VELOCITY_TOLERANCE;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
@@ -9,6 +12,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.internal.camera.delegating.DelegatingCaptureSequence;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.GamepadManager;
@@ -123,13 +127,18 @@ public class BlueTelop extends OpMode {
             // Shooter Controls
             // Use d-pad up/down to toggle between default shooting velocities
             if (gamepadManager2.dpad_up_just_pressed) {
-                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);        }
+                robot.shooter.setExplicitVelocity(robot.shooter.getVelocity() + SHOOTER_ADJUSTMENT_VELOCITY);        }
             if (gamepadManager2.dpad_down_just_pressed) {
-                robot.shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
+                robot.shooter.setExplicitVelocity(robot.shooter.getVelocity() - SHOOTER_ADJUSTMENT_VELOCITY);
             }
 
-            if (gamepadManager2.y_just_pressed) {
-                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
+            // automatically adjust shooter velocity
+            Utilities.updateShooterVelocityBasedOnDistance(robot, detectedTag);
+
+            // Check if the shooter's velocity is within our allowed tolerance
+            boolean shooterAtSpeed = robot.shooter.shooterAtSpeed(robot, detectedTag);
+
+            if (gamepadManager2.y_just_pressed && shooterAtSpeed) {
                 robot.manualShootManager.update(true, robot.dumpManager.isDumping());
             } else {
                 // IMPORTANT: Always call update, passing 'false' when the button isn't newly pressed.
@@ -137,11 +146,15 @@ public class BlueTelop extends OpMode {
             }
 
             //Dump Controls
-            robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
+            if (gamepad2.right_trigger > 0.6 && shooterAtSpeed) {
+                robot.dumpManager.updateTeleOp(true);
+            } else {
+                robot.dumpManager.updateTeleOp(false);
+            }
 
             // Spindexer Manual Rotation
             if (gamepadManager2.a_just_pressed) {
-                robot.spindexerRotator.start(1);  // Rotate one compartment forward
+                robot.spindexerLogic.nextCompartment();  // Rotate one compartment forward
             }
             if (gamepadManager2.b_just_pressed) {
                 robot.spindexerLogic.previousCompartment(); // Rotate one compartment backward

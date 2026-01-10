@@ -100,6 +100,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup1Ball2);
                     follower.setMaxPower(1);
+                    pathTimer.resetTimer();
                     pathState = PathState.DRIVE_PICKUP1BALL2_END;
                 }
                 break;

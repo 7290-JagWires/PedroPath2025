@@ -13,8 +13,11 @@ public class Shooter {
     // --- Velocity Constants (in Ticks per Second) ---
     // Public so other classes can see them (like your Auto op-modes)
     public static final double SHOOTER_OFF_VELOCITY = 0;
+    public static final double SHOOTER_ADJUSTMENT_VELOCITY = 50;
     public static final double SHOOT_TRIANGLE_VELOCITY = 2500;
+    public static final double SHOOT_DEFENSE_VELOCITY = 2200;
     public static final double SHOOT_GOAL_VELOCITY = 1915;
+    public static final double VELOCITY_TOLERANCE = 25;
     public static final double NEGATIVE_VELOCITY = -1000;
 
 
@@ -43,6 +46,7 @@ public class Shooter {
     /**
      * Sets the default shooting velocity that will be used when setTargetVelocity() is called.
      * Call this from your Auto op-mode to prepare for TeleOp.
+     *
      * @param defaultVelocity The desired default speed (e.g., SHOOT_TRIANGLE_VELOCITY).
      */
     public void setDefaultVelocity(double defaultVelocity) {
@@ -59,6 +63,7 @@ public class Shooter {
     /**
      * Overrides the default and sets the shooter to a specific velocity.
      * Useful for distance-based shooting.
+     *
      * @param velocity The specific target velocity in ticks per second.
      */
     public void setExplicitVelocity(double velocity) {
@@ -80,6 +85,7 @@ public class Shooter {
 
     /**
      * Gets the current velocity of the shooter motor.
+     *
      * @return The current velocity in ticks per second.
      */
     public double getVelocity() {
@@ -88,9 +94,32 @@ public class Shooter {
 
     /**
      * Gets the currently configured default target velocity.
+     *
      * @return The default velocity in ticks per second.
      */
     public double getDefaultVelocity() {
         return this.targetVelocity;
     }
+
+    // Add this method inside your Shooter.java file
+
+    /**
+     * Returns the current target velocity of the shooter.
+     *
+     * @return The target velocity in ticks per second.
+     */
+    public boolean shooterAtSpeed(Robot robot, LimelightCamera.TagData detectedTag) {
+
+        if (detectedTag != null) {
+            if (detectedTag.distance <= 50) {
+                return (Math.abs(robot.shooter.getVelocity() - SHOOT_GOAL_VELOCITY) <= VELOCITY_TOLERANCE);
+            } else if (detectedTag.distance >= 100) {
+                return (Math.abs(robot.shooter.getVelocity() - SHOOT_TRIANGLE_VELOCITY) <= VELOCITY_TOLERANCE);
+            } else {
+                return (Math.abs(robot.shooter.getVelocity() - SHOOT_DEFENSE_VELOCITY) <= VELOCITY_TOLERANCE);
+            }
+        } else {
+            return (Math.abs(robot.shooter.getVelocity() - SHOOT_GOAL_VELOCITY) <= VELOCITY_TOLERANCE);
+        }
+        }
 }

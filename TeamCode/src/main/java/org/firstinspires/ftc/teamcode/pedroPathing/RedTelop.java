@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOTER_ADJUSTMENT_VELOCITY;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_GOAL_VELOCITY;
 import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT_TRIANGLE_VELOCITY;
 
@@ -115,13 +116,18 @@ public class RedTelop extends OpMode {
             // Shooter Controls
             // Use d-pad up/down to toggle between default shooting velocities
             if (gamepadManager2.dpad_up_just_pressed) {
-                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);        }
+                robot.shooter.setExplicitVelocity(robot.shooter.getVelocity() + SHOOTER_ADJUSTMENT_VELOCITY);        }
             if (gamepadManager2.dpad_down_just_pressed) {
-                robot.shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
+                robot.shooter.setExplicitVelocity(robot.shooter.getVelocity() - SHOOTER_ADJUSTMENT_VELOCITY);
             }
 
-            if (gamepadManager2.y_just_pressed) {
-                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
+            // automatically adjust shooter velocity
+            Utilities.updateShooterVelocityBasedOnDistance(robot, detectedTag);
+
+            // Check if the shooter's velocity is within our allowed tolerance
+            boolean shooterAtSpeed = robot.shooter.shooterAtSpeed(robot, detectedTag);
+
+            if (gamepadManager2.y_just_pressed && shooterAtSpeed) {
                 robot.manualShootManager.update(true, robot.dumpManager.isDumping());
             } else {
                 // IMPORTANT: Always call update, passing 'false' when the button isn't newly pressed.
@@ -129,7 +135,11 @@ public class RedTelop extends OpMode {
             }
 
             //Dump Controls
-            robot.dumpManager.updateTeleOp(gamepad2.right_trigger > 0.6);
+            if (gamepad2.right_trigger > 0.6 && shooterAtSpeed) {
+                robot.dumpManager.updateTeleOp(true);
+            } else {
+                robot.dumpManager.updateTeleOp(false);
+            }
 
             // Spindexer Manual Rotation
             if (gamepadManager2.a_just_pressed) {
