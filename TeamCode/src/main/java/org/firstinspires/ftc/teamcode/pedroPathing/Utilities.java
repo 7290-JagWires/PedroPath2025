@@ -187,7 +187,6 @@ public class Utilities {
                     }
                     break;
                 case WAITING_FOR_SPIN:
-//                    if (spindexerLogic.spindexerLimitSwitchCheckPickup()) {
                         if (spindexerLogic.spindexerLimitSwitchCheck()) {
                             pickupTimer.reset();
                             if (pickupCount == 1) {
