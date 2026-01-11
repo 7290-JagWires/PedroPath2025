@@ -43,7 +43,9 @@ public class BlueTelop extends OpMode {
     private GamepadManager gamepadManager1;
     private GamepadManager gamepadManager2;
     private TagData detectedTag;
-
+    private boolean isShooting = false;
+    private boolean isShootingAll = false;
+    private boolean shooterAtSpeed = false;
     /**
      * This method runs ONCE when the driver hits "INIT" on the Driver Station.
      * This is where you initialize all your hardware.
@@ -136,18 +138,36 @@ public class BlueTelop extends OpMode {
             Utilities.updateShooterVelocityBasedOnDistance(robot, detectedTag);
 
             // Check if the shooter's velocity is within our allowed tolerance
-            boolean shooterAtSpeed = robot.shooter.shooterAtSpeed(robot, detectedTag);
+            shooterAtSpeed = robot.shooter.shooterAtSpeed(robot, detectedTag);
 
-            if (gamepadManager2.y_just_pressed && shooterAtSpeed) {
+            // 1. Set our INTENT to shoot when 'Y' is pressed.
+            if (gamepadManager2.y_just_pressed) {
+                isShooting = true;
+            }
+
+            // 2. If we have an active intent to shoot AND the shooter is now at speed...
+            if (isShooting && shooterAtSpeed) {
+                // ...then tell the manualShootManager to fire.
                 robot.manualShootManager.update(true, robot.dumpManager.isDumping());
+                // ...and immediately reset our intent so we don't fire again on the next loop.
+                isShooting = false;
             } else {
-                // IMPORTANT: Always call update, passing 'false' when the button isn't newly pressed.
+                // 3. Otherwise (if we aren't trying to shoot, or are still waiting for speed),
+                //    make sure the manualShootManager is told NOT to fire.
                 robot.manualShootManager.update(false, robot.dumpManager.isDumping());
             }
 
-            //Dump Controls
-            if (gamepad2.right_trigger > 0.6 && shooterAtSpeed) {
+            // 1. Set our INTENT to dump all 3 balls
+            if (gamepad2.right_trigger > 0.6) {
+                isShootingAll = true;
+            }
+
+            // 2. If we have an active intent to dump all AND the shooter is now at speed...
+            if (isShootingAll && shooterAtSpeed) {
+                // ...then tell the dump all.
                 robot.dumpManager.updateTeleOp(true);
+                // ...and immediately reset our intent so we don't fire again on the next loop.
+                isShootingAll = false;
             } else {
                 robot.dumpManager.updateTeleOp(false);
             }
@@ -221,6 +241,7 @@ public class BlueTelop extends OpMode {
 //        telemetry.addData("Ball Present", robot.colorSensor.isBallPresent());
 //        telemetry.addData("Shoot State", robot.manualShootManager.getState()); // <-- Optional: new telemetry
         telemetry.addData("Shooter Speed", robot.shooter.getVelocity());
+        telemetry.addData("Shooter At Speed", shooterAtSpeed );
 
 
         // Check if a tag was found
