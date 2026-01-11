@@ -57,13 +57,13 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 break;
             case SCORE1:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
+                    dumpManager.start();
                     if (dumpManager.isFinished()) {
                         if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // scored pickup 1, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
                             follower.followPath(paths.pickup2);
-                            follower.setMaxPower(1);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
                     }
@@ -73,12 +73,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
                     if (dumpManager.isFinished()) {
                         shooter.stopShooter();         //Turn off the shooter when we finish auto
-                        if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
-                            // end state machine
-                            follower.followPath(paths.endPoint);
-                            follower.setMaxPower(1);
-                            intakeActive.intakeOff();
-                        }
+                        intakeActive.intakeOff();
                     }
                 }
                 break;
@@ -90,7 +85,6 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
                             follower.followPath(paths.pickup2);
-                            follower.setMaxPower(1);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
                     }
@@ -99,7 +93,6 @@ public class RedPedroAutoGoal extends BaseAutonomous {
             case DRIVE_PICKUP1:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup1Ball2);
-                    follower.setMaxPower(1);
                     pathTimer.resetTimer();
                     pathState = PathState.DRIVE_PICKUP1BALL2_END;
                 }
@@ -109,8 +102,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.pickup1Ball3, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.pickup1Ball3, true);
                         pathState = PathState.DRIVE_PICKUP1BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
@@ -121,8 +113,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.endPickup1, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.endPickup1, true);
                         pathState = PathState.DRIVE_PICKUP1_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
@@ -138,17 +129,15 @@ public class RedPedroAutoGoal extends BaseAutonomous {
 
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.score1, false);
-                        follower.setMaxPower(1);
                         pathState = PathState.SCORE1;
                         intakeActive.intakeOff();
-                        dumpManager.start();
+//                        dumpManager.start();
                     }
                 }
                 break;
             case DRIVE_PICKUP2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup2Ball2);
-                    follower.setMaxPower(1);
                     pathState = PathState.DRIVE_PICKUP2BALL2_END;
                 }
                 break;
@@ -157,8 +146,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.pickup2Ball3, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.pickup2Ball3, true);
                         pathState = PathState.DRIVE_PICKUP2BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
@@ -169,8 +157,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.endPickup2, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.endPickup2, true);
                         pathState = PathState.DRIVE_PICKUP2_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
@@ -185,8 +172,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                         startSpindexerRotationForTag(PICKUP_ROW2_PGP);
 
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.score2, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.score2, true);
                         pathState = PathState.SCORE2;
                         intakeActive.intakeOff();
                         dumpManager.start();
@@ -196,7 +182,6 @@ public class RedPedroAutoGoal extends BaseAutonomous {
             case DRIVE_PICKUP3:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup3Ball2);
-                    follower.setMaxPower(1);
                     pathState = PathState.DRIVE_PICKUP3BALL2_END;
                 }
                 break;
@@ -204,8 +189,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.pickup3Ball3, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.pickup3Ball3, true);
                         pathState = PathState.DRIVE_PICKUP3BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
@@ -216,8 +200,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.endPickup3, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.endPickup3, true);
                         pathState = PathState.DRIVE_PICKUP3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
@@ -233,8 +216,7 @@ public class RedPedroAutoGoal extends BaseAutonomous {
 
 
                         // picked up at spike 1. drive from pickup1 to score
-                        follower.followPath(paths.score3, false);
-                        follower.setMaxPower(1);
+                        follower.followPath(paths.score3, true);
                         pathState = PathState.SCORE3;
                         intakeActive.intakeOff();
                         dumpManager.start();

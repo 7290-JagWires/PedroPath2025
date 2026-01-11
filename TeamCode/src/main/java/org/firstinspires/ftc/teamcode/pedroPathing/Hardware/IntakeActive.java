@@ -14,9 +14,9 @@ public class IntakeActive {
     private OpMode myOpMode;
 
     // Speed constants
-    private static final double INTAKE_ON  = -1.0;
+    private static final double INTAKE_ON  = -1;
     private static final double INTAKE_OFF =  0.0;
-    private static final double INTAKE_REVERSE=  1.0;
+    private static final double INTAKE_REVERSE=  1;
 
 
     public IntakeActive(OpMode opMode) {

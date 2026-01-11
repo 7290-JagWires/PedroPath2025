@@ -22,12 +22,12 @@ public class BluePaths {
 
     //Common poses for all programs
     public static final Pose pickup1Pose = new Pose(42, 82, Math.toRadians(180));
-    public static final Pose pickup1Pose2 = new Pose(35, 82, Math.toRadians(180));
-    public static final Pose pickup1Pose3 = new Pose(31, 82, Math.toRadians(180));
-    public static final Pose endPickup1Pose = new Pose(26, 82, Math.toRadians(180));
+    public static final Pose pickup1Pose2 = new Pose(34, 82, Math.toRadians(180));
+    public static final Pose pickup1Pose3 = new Pose(30, 82, Math.toRadians(180));
+    public static final Pose endPickup1Pose = new Pose(20, 82, Math.toRadians(180));
     public static final Pose pickup2Pose = new Pose(50, 58, Math.toRadians(180));
-    public static final Pose pickup2Pose2 = new Pose(37, 58, Math.toRadians(180));
-    public static final Pose pickup2Pose3 = new Pose(32, 58, Math.toRadians(180));
+    public static final Pose pickup2Pose2 = new Pose(34, 58, Math.toRadians(180));
+    public static final Pose pickup2Pose3 = new Pose(30, 58, Math.toRadians(180));
     public static final Pose endPickup2Pose = new Pose(20, 58, Math.toRadians(180));
     public static final Pose pickup3Pose = new Pose(45, 35, Math.toRadians(180));
     public static final Pose pickup3Pose2 = new Pose(36, 35, Math.toRadians(180));

@@ -9,6 +9,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Door;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.IntakeActive;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Spindexer;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.SpindexerMotor;
 import org.firstinspires.ftc.teamcode.pedroPathing.Logic.SpindexerIndexerLogic;
 import org.firstinspires.ftc.teamcode.pedroPathing.Sensors.ColorSensor;
@@ -40,6 +41,8 @@ public abstract class BaseAutonomous extends OpMode {
     protected IntakeActive intakeActive;
     protected Shooter shooter;
     protected Door door;
+    protected Spindexer spindexer;
+
     protected SpindexerMotor spindexerMotor;
     protected MagneticLimitSwitch spindexerMag;
     protected LimelightCamera limelight; // Make sure to add your LimelightCamera
@@ -95,6 +98,7 @@ public abstract class BaseAutonomous extends OpMode {
         // Initialize logic and utility managers
         spindexerLogic = new SpindexerIndexerLogic(this, spindexerMotor, spindexerMag, TICKS_PER_COMPARTMENT);
         spindexerRotator = new SpindexerRotator(spindexerLogic);
+        spindexer = new Spindexer(this, spindexerMag);
 
         dumpManager = new DumpManager(this, shooter, door, spindexerLogic,spindexerRotator);
         pickupManager = new PickupManager(door, shooter, intakeActive, spindexerLogic, colorSensor, indicator);
