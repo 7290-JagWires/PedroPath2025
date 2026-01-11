@@ -10,6 +10,8 @@ public class BluePedroAutoGoal extends BaseAutonomous {
     // This class only needs to contain what is UNIQUE to the Blue side.
     private BluePaths paths;
 
+
+
     // 1. Implement the required abstract methods
     @Override
     protected void buildPaths() {
@@ -115,7 +117,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP1BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
-                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
                     if (!follower.isBusy()) {
                         // Get the tag ID that was detected during the init_loop
                         // and sort the balls in the correct order
@@ -140,7 +142,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP1_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
-                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
                     if (!follower.isBusy()) {
                         // Get the tag ID that was detected during the init_loop
                         // and sort the balls in the correct order
@@ -190,7 +192,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP2BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
-                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
                     // Get the tag ID that was detected during the init_loop
                     // and sort the balls in the correct order
                     startSpindexerRotationForTag(PICKUP_ROW2_PGP);
@@ -213,7 +215,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP2_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
-                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
                     // Get the tag ID that was detected during the init_loop
                     // and sort the balls in the correct order
                     startSpindexerRotationForTag(PICKUP_ROW2_PGP);
@@ -260,7 +262,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP3BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
-                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
                     // Get the tag ID that was detected during the init_loop
                     // and sort the balls in the correct order
                     startSpindexerRotationForTag(PICKUP_ROW3_GPP);
@@ -283,7 +285,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
-                } else if (pathTimer.getElapsedTimeSeconds() > 2) {
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
                     // Get the tag ID that was detected during the init_loop
                     // and sort the balls in the correct order
                     startSpindexerRotationForTag(PICKUP_ROW3_GPP);

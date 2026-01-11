@@ -155,9 +155,11 @@ public class BlueTelop extends OpMode {
             // Spindexer Manual Rotation
             if (gamepadManager2.a_just_pressed) {
                 robot.spindexerLogic.nextCompartment();  // Rotate one compartment forward
+                robot.spindexerLogic.spindexerLimitSwitchCheck();
             }
             if (gamepadManager2.b_just_pressed) {
                 robot.spindexerLogic.previousCompartment(); // Rotate one compartment backward
+                robot.spindexerLogic.spindexerLimitSwitchCheck();
             }
 
             // Manual Re-Homing
@@ -214,13 +216,12 @@ public class BlueTelop extends OpMode {
                 currentPose.getX(), currentPose.getY(), currentPose.getHeading());
         telemetry.addData("Dump Mode Active", robot.dumpManager.isDumping());
         telemetry.addData("Dump State", robot.dumpManager.getState());
-//        telemetry.addData("Intake Comp", robot.spindexer.getIntakeCompartment());
-//        telemetry.addData("Shooter Comp", robot.spindexer.getShooterCompartment());
-//        telemetry.addData("Next Up", robot.spindexer.getNextUpCompartment());
         telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
-        telemetry.addData("Detected Color", robot.colorSensor.getBallColor());
-        telemetry.addData("Ball Present", robot.colorSensor.isBallPresent());
-        telemetry.addData("Shoot State", robot.manualShootManager.getState()); // <-- Optional: new telemetry
+//        telemetry.addData("Detected Color", robot.colorSensor.getBallColor());
+//        telemetry.addData("Ball Present", robot.colorSensor.isBallPresent());
+//        telemetry.addData("Shoot State", robot.manualShootManager.getState()); // <-- Optional: new telemetry
+        telemetry.addData("Shooter Speed", robot.shooter.getVelocity());
+
 
         // Check if a tag was found
         if (detectedTag != null) {
