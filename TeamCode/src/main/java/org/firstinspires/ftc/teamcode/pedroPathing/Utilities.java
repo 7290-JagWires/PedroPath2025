@@ -262,7 +262,7 @@ public class Utilities {
     public static class DumpManager {
 
         // Enum for state tracking
-        public enum DumpState { IDLE, SPIN_UP, DUMPING, FINISHED }
+        public enum DumpState { IDLE, PRE_LOAD ,SPIN_UP, DUMPING, FINISHED }
 
         // State variables
         private DumpState dumpState = DumpState.IDLE;
@@ -317,6 +317,13 @@ public class Utilities {
             }
         }
 
+        public void scorePreLoad() {
+            if (dumpState == DumpState.IDLE || dumpState == DumpState.FINISHED) {
+                this.dumpState = DumpState.PRE_LOAD;
+                this.dumpCount = 0;
+                this.dumpTimer.reset();
+            }
+        }
         /**
          * Updates the state machine for the pickup process. This method should be called repeatedly in a loop.
          * It manages the transitions between different states of the pickup cycle.
@@ -342,8 +349,13 @@ public class Utilities {
             switch (dumpState) {
                 case IDLE:
                     break;
+                case PRE_LOAD:
+                    launchTimer.reset();
+                    dumpState = DumpState.DUMPING;
+                    break;
                 case SPIN_UP:
                     if (isTeleOpDumping) {
+                        launchTimer.reset();
                         dumpState = DumpState.DUMPING;
                     } else if (dumpTimer.milliseconds() >= SHOOTER_SPINUP_MS) {
                         launchTimer.reset();

@@ -44,7 +44,11 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 break;
             case WAIT_FOR_SPIN:
                 if (!follower.isBusy() && spindexerRotator.isFinished()) {
-                    dumpManager.start();
+
+//                    dumpManager.start();
+
+                    dumpManager.scorePreLoad();
+
                     setPathState(PathState.SCORE_PRELOAD);
                 }
                 break;
