@@ -138,7 +138,7 @@ public class BlueTelop extends OpMode {
             Utilities.updateShooterVelocityBasedOnDistance(robot, detectedTag);
 
             // Check if the shooter's velocity is within our allowed tolerance
-            shooterAtSpeed = robot.shooter.shooterAtSpeed(robot, detectedTag);
+            shooterAtSpeed = true; //robot.shooter.shooterAtSpeed(robot, detectedTag);
 
             // 1. Set our INTENT to shoot when 'Y' is pressed.
             if (gamepadManager2.y_just_pressed) {

@@ -110,16 +110,16 @@ public class Shooter {
      */
     public boolean shooterAtSpeed(Robot robot, LimelightCamera.TagData detectedTag) {
 
-        if (detectedTag != null) {
-            if (detectedTag.distance <= 50) {
-                return (Math.abs(robot.shooter.getVelocity() - SHOOT_GOAL_VELOCITY) <= VELOCITY_TOLERANCE);
-            } else if (detectedTag.distance >= 100) {
+        if (detectedTag != null)
+        {
+            if (detectedTag.distance > 70  && detectedTag.distance < 115) {
+                return (Math.abs(robot.shooter.getVelocity() - SHOOT_DEFENSE_VELOCITY) <= VELOCITY_TOLERANCE);
+            } else if (detectedTag.distance >= 115) {
                 return (Math.abs(robot.shooter.getVelocity() - SHOOT_TRIANGLE_VELOCITY) <= VELOCITY_TOLERANCE);
             } else {
-                return (Math.abs(robot.shooter.getVelocity() - SHOOT_DEFENSE_VELOCITY) <= VELOCITY_TOLERANCE);
+                return (Math.abs(robot.shooter.getVelocity() - SHOOT_GOAL_VELOCITY) <= VELOCITY_TOLERANCE);
             }
-        } else {
-            return (Math.abs(robot.shooter.getVelocity() - SHOOT_GOAL_VELOCITY) <= VELOCITY_TOLERANCE);
         }
+            return true;
         }
-}
+    }

@@ -27,6 +27,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
     }
 
     public void autonomousPathUpdate() {
+        intakeActive.intakeOn();
         shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
         switch (pathState) {
             case DRIVE_START_SCORE:
@@ -59,7 +60,6 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                 break;
             case SCORE1:
                 if (pathTimer.getElapsedTimeSeconds() > DOOR_TIMER_DELAY && !follower.isBusy()) {
-//                    dumpManager.start();
                     if (dumpManager.isFinished()) {
                         if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // scored pickup 1, drive to pickup 2
@@ -88,7 +88,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
                             follower.followPath(paths.pickup2);
-                            follower.setMaxPower(1);
+                            follower.setMaxPower(.8);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
                     }
@@ -270,7 +270,6 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.pickup3Ball3, false);
-                        follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP3BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                         pathTimer.resetTimer(); // Start the timer for the first pickup attempt
@@ -294,7 +293,6 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.endPickup3, false);
-                        follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP3_END;
                         pickupManager.start(); // Restart for the next pickup
                         pathTimer.resetTimer(); // Start the timer for the first pickup attempt

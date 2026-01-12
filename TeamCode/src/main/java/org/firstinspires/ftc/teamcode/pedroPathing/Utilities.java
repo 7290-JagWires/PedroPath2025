@@ -644,17 +644,14 @@ public class Utilities {
     public static void updateShooterVelocityBasedOnDistance(Robot robot, LimelightCamera.TagData detectedTag) {
         if (detectedTag != null) {
             // If a tag is visible, adjust velocity based on its distance
-            if (detectedTag.distance <= 50) {
-                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
-            } else if (detectedTag.distance >= 100) {
+            if (detectedTag.distance > 70  && detectedTag.distance < 115) {
+                robot.shooter.setExplicitVelocity(SHOOT_DEFENSE_VELOCITY);
+            } else if (detectedTag.distance >= 115) {
                 robot.shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
             } else {
                 // If the tag is at a medium distance, use the defense velocity
-                robot.shooter.setExplicitVelocity(SHOOT_DEFENSE_VELOCITY);
+                robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
             }
-        } else {
-            // If no tag is visible, default to the standard goal velocity
-            robot.shooter.setExplicitVelocity(SHOOT_GOAL_VELOCITY);
         }
     }
 }
