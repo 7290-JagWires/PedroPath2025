@@ -65,7 +65,14 @@ public class RedPedroAutoGoal extends BaseAutonomous {
                             // scored pickup 1, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
-                            follower.followPath(paths.pickup2);
+//                            follower.followPath(paths.pickup2);
+
+
+
+                            follower.followPath(paths.pickup2Curve);
+
+
+
                             follower.setMaxPower(1);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }

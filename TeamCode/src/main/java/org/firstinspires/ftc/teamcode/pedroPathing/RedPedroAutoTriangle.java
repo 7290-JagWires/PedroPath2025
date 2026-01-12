@@ -35,7 +35,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
 
                 // 4. Start driving the path (non-blocking which is the falst command)
                 follower.followPath(paths.scorePreloadTriangle, false);
-                follower.setMaxPower(.4);
+                follower.setMaxPower(.6);
 
                 // 5. Immediately go to the waiting state.
                 setPathState(PathState.WAIT_FOR_SPIN);
@@ -64,7 +64,12 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                             // scored pickup 1, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
+
+//                            follower.followPath(paths.pickup2Triangle);
+
                             follower.followPath(paths.pickup2Triangle);
+
+
                             follower.setMaxPower(.9);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }

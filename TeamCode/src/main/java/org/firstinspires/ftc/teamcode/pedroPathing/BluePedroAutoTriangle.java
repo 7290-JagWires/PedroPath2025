@@ -64,7 +64,12 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
                             // scored pickup 1, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
+
+//                            follower.followPath(paths.pickup2Triangle);
+
                             follower.followPath(paths.pickup2Triangle);
+
+
                             follower.setMaxPower(.9);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }

@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
 import com.pedropathing.follower.Follower;
+import com.pedropathing.geometry.BezierCurve;
 import com.pedropathing.geometry.BezierLine;
 import com.pedropathing.geometry.Pose;
 import com.pedropathing.paths.PathChain;
@@ -25,12 +26,13 @@ public class BluePaths {
     public static final Pose pickup1Pose2 = new Pose(33, 82, Math.toRadians(180));
     public static final Pose pickup1Pose3 = new Pose(28, 82, Math.toRadians(180));
     public static final Pose endPickup1Pose = new Pose(20, 82, Math.toRadians(180));
-    public static final Pose pickup2Pose = new Pose(56, 59, Math.toRadians(180));
+    public static final Pose pickup2Pose = new Pose(36, 59, Math.toRadians(180));
+    public static final Pose pickup2PoseCurve = new Pose(56, 59, Math.toRadians(180));
     public static final Pose pickup2Pose2 = new Pose(33, 59, Math.toRadians(180));
     public static final Pose pickup2Pose3 = new Pose(26, 59, Math.toRadians(180));
     public static final Pose endPickup2Pose = new Pose(20, 59, Math.toRadians(180));
     public static final Pose pickup3Pose = new Pose(47, 37, Math.toRadians(180));
-    public static final Pose pickup3Pose2 = new Pose(36, 37, Math.toRadians(180));
+    public static final Pose pickup3Pose2 = new Pose(33, 37, Math.toRadians(180));
     public static final Pose pickup3Pose3 = new Pose(31, 37, Math.toRadians(180));
     public static final Pose endPickup3Pose = new Pose(20, 37, Math.toRadians(180));
     
@@ -38,8 +40,9 @@ public class BluePaths {
     // PathChain objects - these will be initialized by buildPaths()
     public PathChain scorePreload, pickup1, pickup1Ball2, pickup1Ball3, endPickup1, score1;
     public PathChain pickup2, pickup2Ball2, pickup2Ball3, endPickup2, score2, pickup3, score3, endPoint;
+    public PathChain pickup2Curve, pickup2TriangleCurve;
     public PathChain pickup1Triangle, score1Triangle, pickup2Triangle, score2Triangle, scorePreloadTriangle, pickup3Triangle, pickup3Ball2;
-    public PathChain pickup3Ball3, endPickup3, score3Triangle, endPointTriangle, myBezierCurvePath;
+    public PathChain pickup3Ball3, endPickup3, score3Triangle, endPointTriangle;
 
     /**
      * Constructor for the Paths class.
@@ -59,6 +62,19 @@ public class BluePaths {
         Anything with Pickup 2 - Ball pattern in the order of pickup is Purple, Green, Purple
         Anything with Pickup 2 - Ball pattern in the order of pickup is Green ,Purple, Purple
         */
+
+        //Curves
+        //Curves
+
+        pickup2Curve = follower.pathBuilder()
+                .addPath(new BezierCurve(shootPoint,pickup2PoseCurve,pickup2Pose))
+                .setTangentHeadingInterpolation()
+                .build();
+
+        pickup2TriangleCurve = follower.pathBuilder()
+                .addPath(new BezierCurve(shootPointTriangle,pickup2PoseCurve,pickup2Pose))
+                .setTangentHeadingInterpolation()
+                .build();
 
         //  Common paths
         //  Common paths
