@@ -4,8 +4,6 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-import java.nio.file.Paths;
-
 @Autonomous(name = "Red Auto Triangle", preselectTeleOp = "Red Telop")
 public class RedPedroAutoTriangle extends BaseAutonomous {
 
@@ -15,18 +13,19 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
     // 1. Implement the required abstract methods
     @Override
     protected void buildPaths() {
-        // The Red class handles creating the unique paths for the red side
+        // The RedPaths class handles creating the unique paths for the Red side
         paths = new RedPaths(follower);
         paths.buildPaths();
     }
 
     @Override
     protected void setStartingPose() {
-        // Set the specific starting pose for the red side
+        // Set the specific starting pose for the Red side
         follower.setPose(RedPaths.startPoseTriangle);
     }
 
     public void autonomousPathUpdate() {
+        intakeActive.intakeOn();
         shooter.setExplicitVelocity(SHOOT_TRIANGLE_VELOCITY);
         switch (pathState) {
             case DRIVE_START_SCORE:
@@ -36,7 +35,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
 
                 // 4. Start driving the path (non-blocking which is the falst command)
                 follower.followPath(paths.scorePreloadTriangle, false);
-                follower.setMaxPower(1);
+                follower.setMaxPower(.4);
 
                 // 5. Immediately go to the waiting state.
                 setPathState(PathState.WAIT_FOR_SPIN);
@@ -54,6 +53,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     pickupManager.start();
                     pickupManager.setTotalBallCount(0);
                     follower.followPath(paths.pickup3Triangle);
+                    follower.setMaxPower(.9);
                     setPathState(PathState.DRIVE_PICKUP3);
                 }
                 break;
@@ -65,7 +65,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
                             follower.followPath(paths.pickup2Triangle);
-                            follower.setMaxPower(1);
+                            follower.setMaxPower(.9);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
                     }
@@ -78,7 +78,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                         if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // end state machine
                             follower.followPath(paths.endPointTriangle);
-                            follower.setMaxPower(1);
+                            follower.setMaxPower(.9);
                             intakeActive.intakeOff();
                             setPathState(PathState.END);
                         }
@@ -93,7 +93,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
                             follower.followPath(paths.pickup2);
-                            follower.setMaxPower(1);
+                            follower.setMaxPower(.9);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
                     }
@@ -103,11 +103,11 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup1Ball2);
                     follower.setMaxPower(1);
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     pathState = PathState.DRIVE_PICKUP1BALL2_END;
                 }
                 break;
             case DRIVE_PICKUP1BALL2_END:
-                pickupManager.update(); // Make sure SM is running
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
@@ -116,10 +116,22 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                         pathState = PathState.DRIVE_PICKUP1BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
                     }
+                } else if (!pickupManager.isFinished() && pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
+                    if (!follower.isBusy()) {
+                        // Get the tag ID that was detected during the init_loop
+                        // and sort the balls in the correct order
+                        startSpindexerRotationForTag(PICKUP_ROW1_PPG);
+
+                        // picked up at spike 1. drive from pickup1 to score
+                        follower.followPath(paths.score1, false);
+                        follower.setMaxPower(1);
+                        pathState = PathState.SCORE1;
+                        dumpManager.start();
+                        pathTimer.resetTimer(); // Start the timer for the first pickup attempt
+                    }
                 }
                 break;
             case DRIVE_PICKUP1BALL3_END:
-                pickupManager.update(); // Make sure SM is running
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
@@ -131,7 +143,6 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                 }
                 break;
             case DRIVE_PICKUP1_END:
-                pickupManager.update(); // Make sure SM is running
                 if (pickupManager.isFinished()) { // Check state with the new method
                     if (!follower.isBusy()) {
                         // Get the tag ID that was detected during the init_loop
@@ -142,7 +153,6 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                         follower.followPath(paths.score1Triangle, false);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE1;
-                        intakeActive.intakeOff();
                         dumpManager.start();
                     }
                 }
@@ -150,7 +160,8 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
             case DRIVE_PICKUP2:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup2Ball2);
-                    follower.setMaxPower(1);
+                    follower.setMaxPower(.8);
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     pathState = PathState.DRIVE_PICKUP2BALL2_END;
                 }
                 break;
@@ -160,10 +171,21 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.pickup2Ball3, false);
-                        follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
+                        pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW2_PGP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score2Triangle, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE2;
+                    dumpManager.start();
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                 }
                 break;
             case DRIVE_PICKUP2BALL3_END:
@@ -172,10 +194,21 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.endPickup2, false);
-                        follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP2_END;
                         pickupManager.start(); // Restart for the next pickup
+                        pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW2_PGP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score2Triangle, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE2;
+                    dumpManager.start();
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                 }
                 break;
             case DRIVE_PICKUP2_END:
@@ -190,15 +223,27 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                         follower.followPath(paths.score2Triangle, false);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE2;
-                        intakeActive.intakeOff();
                         dumpManager.start();
+                        pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW2_PGP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score2Triangle, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE2;
+                    dumpManager.start();
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                 }
                 break;
             case DRIVE_PICKUP3:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup3Ball2);
-                    follower.setMaxPower(1);
+                    follower.setMaxPower(.6);
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     pathState = PathState.DRIVE_PICKUP3BALL2_END;
                 }
                 break;
@@ -207,10 +252,21 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.pickup3Ball3, false);
-                        follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP3BALL3_END;
                         pickupManager.start(); // Restart for the next pickup
+                        pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW3_GPP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score3Triangle, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE3;
+                    dumpManager.start();
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                 }
                 break;
             case DRIVE_PICKUP3BALL3_END:
@@ -219,10 +275,21 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     if (!follower.isBusy()) {
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.endPickup3, false);
-                        follower.setMaxPower(1);
                         pathState = PathState.DRIVE_PICKUP3_END;
                         pickupManager.start(); // Restart for the next pickup
+                        pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW3_GPP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score3Triangle, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE3;
+                    dumpManager.start();
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                 }
                 break;
             case DRIVE_PICKUP3_END:
@@ -233,14 +300,24 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                         // and sort the balls in the correct order
                         startSpindexerRotationForTag(PICKUP_ROW3_GPP);
 
-
                         // picked up at spike 1. drive from pickup1 to score
                         follower.followPath(paths.score3Triangle, false);
                         follower.setMaxPower(1);
                         pathState = PathState.SCORE3;
-                        intakeActive.intakeOff();
                         dumpManager.start();
+                        pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     }
+                } else if (pathTimer.getElapsedTimeSeconds() > PICKUP_MISSED_BALL_TIMER_DELAY) {
+                    // Get the tag ID that was detected during the init_loop
+                    // and sort the balls in the correct order
+                    startSpindexerRotationForTag(PICKUP_ROW3_GPP);
+
+                    // picked up at spike 1. drive from pickup1 to score
+                    follower.followPath(paths.score3Triangle, false);
+                    follower.setMaxPower(1);
+                    pathState = PathState.SCORE3;
+                    dumpManager.start();
+                    pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                 }
                 break;
             default:
