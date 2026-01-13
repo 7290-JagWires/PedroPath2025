@@ -36,14 +36,14 @@ public class BluePaths {
     public static final Pose pickup3Pose2 = new Pose(35, 35, Math.toRadians(180));
     public static final Pose pickup3Pose3 = new Pose(31, 35, Math.toRadians(180));
     public static final Pose endPickup3Pose = new Pose(20, 35, Math.toRadians(180));
-    public static final Pose pickup3PoseCurve = new Pose(59, 54, Math.toRadians(180));
+    public static final Pose doNothingPose = new Pose(33, 12, Math.toRadians(180));
 
     // PathChain objects - these will be initialized by buildPaths()
     public PathChain scorePreload, pickup1, pickup1Ball2, pickup1Ball3, endPickup1, score1;
     public PathChain pickup2, pickup2Ball2, pickup2Ball3, endPickup2, score2, pickup3, score3, endPoint;
     public PathChain pickup2Curve, pickup2TriangleCurve;
     public PathChain pickup1Triangle, score1Triangle, pickup2Triangle, score2Triangle, scorePreloadTriangle, pickup3Triangle, pickup3Ball2;
-    public PathChain pickup3Ball3, endPickup3, score3Triangle, endPointTriangle;
+    public PathChain pickup3Ball3, endPickup3, score3Triangle, endPointTriangle, doNothingTriangle;
 
     /**
      * Constructor for the Paths class.
@@ -151,6 +151,7 @@ public class BluePaths {
                 .setLinearHeadingInterpolation(shootPoint.getHeading(), endPickup1Pose.getHeading())
                 .build();
 
+
         // Triangle Paths
         // Triangle Paths
         scorePreloadTriangle = follower.pathBuilder()
@@ -184,6 +185,10 @@ public class BluePaths {
         endPointTriangle = follower.pathBuilder()  //Finish spot
                 .addPath(new BezierLine(shootPointTriangle, pickup3Pose))
                 .setLinearHeadingInterpolation(shootPointTriangle.getHeading(), pickup3Pose.getHeading())
+                .build();
+        doNothingTriangle = follower.pathBuilder()  //Finish spot
+                .addPath(new BezierLine(shootPointTriangle, doNothingPose))
+                .setLinearHeadingInterpolation(shootPointTriangle.getHeading(), doNothingPose.getHeading())
                 .build();
     }
 }
