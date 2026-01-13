@@ -90,16 +90,10 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     if (dumpManager.isFinished()) {
                         if (pathTimer.getElapsedTimeSeconds() > 7 && !follower.isBusy()) {
                             // scored pickup 3, drive to pickup 2
-                            pickupManager.start();
-                            pickupManager.setTotalBallCount(0);
-
-//                            follower.followPath(paths.pickup2Triangle);
-
-                            follower.followPath(paths.pickup2TriangleCurve);
-
-
+                            follower.followPath(paths.pickup3Triangle);
                             follower.setMaxPower(.9);
-                            setPathState(PathState.DRIVE_PICKUP2);
+                            intakeActive.intakeOff();
+                            setPathState(PathState.END);
                         }
                     }
                 }

@@ -18,7 +18,7 @@ public class RedPaths {
     // Poses can be public and static so they can be accessed from anywhere
     public static final Pose startPose = new Pose(17, 29, Math.toRadians(-25));
     public static final Pose startPoseTriangle = new Pose(56, 135, Math.toRadians(-90));
-    public static final Pose shootPoint = new Pose(55, 52, Math.toRadians(-135));
+    public static final Pose shootPoint = new Pose(56, 50, Math.toRadians(-135));
     public static final Pose shootPointTriangle = new Pose(56, 126, Math.toRadians(-107));
 
     //Common poses for all programs
