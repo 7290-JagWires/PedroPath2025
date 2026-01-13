@@ -64,12 +64,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                             // scored pickup 1, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
-
-//                            follower.followPath(paths.pickup2Triangle);
-
                             follower.followPath(paths.pickup2Triangle);
-
-
                             follower.setMaxPower(.9);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
@@ -97,7 +92,12 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                             // scored pickup 3, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
-                            follower.followPath(paths.pickup2);
+
+//                            follower.followPath(paths.pickup2Triangle);
+
+                            follower.followPath(paths.pickup2TriangleCurve);
+
+
                             follower.setMaxPower(.9);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }

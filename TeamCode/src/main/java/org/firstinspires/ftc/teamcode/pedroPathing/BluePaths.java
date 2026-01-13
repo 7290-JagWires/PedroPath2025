@@ -18,24 +18,26 @@ public class BluePaths {
     // Poses can be public and static so they can be accessed from anywhere
     public static final Pose startPose = new Pose(16, 115, Math.toRadians(25));
     public static final Pose startPoseTriangle = new Pose(56, 9, Math.toRadians(90));
-    public static final Pose shootPoint = new Pose(59, 97, Math.toRadians(152));
-    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(121));
+    public static final Pose shootPoint = new Pose(54, 97, Math.toRadians(160));
+    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(130));
 
     //Common poses for all programs
     public static final Pose pickup1Pose = new Pose(42, 82, Math.toRadians(180));
     public static final Pose pickup1Pose2 = new Pose(33, 82, Math.toRadians(180));
     public static final Pose pickup1Pose3 = new Pose(28, 82, Math.toRadians(180));
     public static final Pose endPickup1Pose = new Pose(20, 82, Math.toRadians(180));
-    public static final Pose pickup2Pose = new Pose(36, 59, Math.toRadians(180));
-    public static final Pose pickup2PoseCurve = new Pose(56, 59, Math.toRadians(180));
-    public static final Pose pickup2Pose2 = new Pose(33, 59, Math.toRadians(180));
+    public static final Pose pickup2Pose = new Pose(34, 56, Math.toRadians(180));
+    public static final Pose pickup2PoseCurve = new Pose(64, 57, Math.toRadians(180));
+
+    public static final Pose pickup2PoseCurveTriangle = new Pose(60, 59, Math.toRadians(180));
+    public static final Pose pickup2Pose2 = new Pose(32, 59, Math.toRadians(180));
     public static final Pose pickup2Pose3 = new Pose(26, 59, Math.toRadians(180));
     public static final Pose endPickup2Pose = new Pose(20, 59, Math.toRadians(180));
     public static final Pose pickup3Pose = new Pose(47, 37, Math.toRadians(180));
-    public static final Pose pickup3Pose2 = new Pose(33, 37, Math.toRadians(180));
-    public static final Pose pickup3Pose3 = new Pose(31, 37, Math.toRadians(180));
-    public static final Pose endPickup3Pose = new Pose(20, 37, Math.toRadians(180));
-    
+    public static final Pose pickup3Pose2 = new Pose(35, 35, Math.toRadians(180));
+    public static final Pose pickup3Pose3 = new Pose(31, 35, Math.toRadians(180));
+    public static final Pose endPickup3Pose = new Pose(20, 35, Math.toRadians(180));
+    public static final Pose pickup3PoseCurve = new Pose(59, 54, Math.toRadians(180));
 
     // PathChain objects - these will be initialized by buildPaths()
     public PathChain scorePreload, pickup1, pickup1Ball2, pickup1Ball3, endPickup1, score1;
@@ -72,7 +74,7 @@ public class BluePaths {
                 .build();
 
         pickup2TriangleCurve = follower.pathBuilder()
-                .addPath(new BezierCurve(shootPointTriangle,pickup2PoseCurve,pickup2Pose))
+                .addPath(new BezierCurve(shootPointTriangle,pickup2PoseCurveTriangle,pickup2Pose))
                 .setTangentHeadingInterpolation()
                 .build();
 
