@@ -18,34 +18,32 @@ public class RedPaths {
     // Poses can be public and static so they can be accessed from anywhere
     public static final Pose startPose = new Pose(17, 29, Math.toRadians(-25));
     public static final Pose startPoseTriangle = new Pose(56, 135, Math.toRadians(-90));
-    public static final Pose shootPoint = new Pose(59, 47, Math.toRadians(-140));
-    public static final Pose shootPointTriangle = new Pose(56, 126, Math.toRadians(-120));
+    public static final Pose shootPoint = new Pose(56, 50, Math.toRadians(-135));
+    public static final Pose shootPointTriangle = new Pose(56, 126, Math.toRadians(-107));
 
     //Common poses for all programs
     public static final Pose pickup1Pose = new Pose(42, 62, Math.toRadians(180));
-    public static final Pose pickup1Pose2 = new Pose(35, 62, Math.toRadians(180));
-    public static final Pose pickup1Pose3 = new Pose(31, 62, Math.toRadians(180));
-    public static final Pose endPickup1Pose = new Pose(27, 62, Math.toRadians(180));
+    public static final Pose pickup1Pose2 = new Pose(34, 62, Math.toRadians(180));
+    public static final Pose pickup1Pose3 = new Pose(30, 62, Math.toRadians(180));
+    public static final Pose endPickup1Pose = new Pose(22, 62, Math.toRadians(180));
     public static final Pose pickup2Pose = new Pose(40, 86, Math.toRadians(180));
     public static final Pose pickup2PoseCurve = new Pose(59, 86, Math.toRadians(180));
-    public static final Pose pickup2Pose2 = new Pose(37, 86, Math.toRadians(180));
-    public static final Pose pickup2Pose3 = new Pose(32, 86, Math.toRadians(180));
+    public static final Pose pickup2PoseCurveTriangle = new Pose(60, 80, Math.toRadians(180));
+    public static final Pose pickup2Pose2 = new Pose(34, 86, Math.toRadians(180));
+    public static final Pose pickup2Pose3 = new Pose(30, 86, Math.toRadians(180));
     public static final Pose endPickup2Pose = new Pose(22, 86, Math.toRadians(180));
-    public static final Pose pickup3Pose = new Pose(38, 108, Math.toRadians(180));
-    public static final Pose pickup3Pose2 = new Pose(33, 108, Math.toRadians(180));
-    public static final Pose pickup3Pose3 = new Pose(28, 108, Math.toRadians(180));
-    public static final Pose endPickup3Pose = new Pose(22, 108, Math.toRadians(180));
-
-
-
-
+    public static final Pose pickup3Pose = new Pose(47, 109, Math.toRadians(180));
+    public static final Pose pickup3Pose2 = new Pose(34, 109, Math.toRadians(180));
+    public static final Pose pickup3Pose3 = new Pose(28, 109, Math.toRadians(180));
+    public static final Pose endPickup3Pose = new Pose(22, 109, Math.toRadians(180));
+    public static final Pose doNothingPose = new Pose(33, 132, Math.toRadians(180));
 
     // PathChain objects - these will be initialized by buildPaths()
     public PathChain scorePreload, pickup1, pickup1Ball2, pickup1Ball3, endPickup1, score1;
     public PathChain pickup2, pickup2Ball2, pickup2Ball3, endPickup2, score2, pickup3, score3, endPoint;
     public PathChain pickup2Curve, pickup2TriangleCurve;
     public PathChain pickup1Triangle, score1Triangle, pickup2Triangle, score2Triangle, scorePreloadTriangle, pickup3Triangle, pickup3Ball2;
-    public PathChain pickup3Ball3, endPickup3, score3Triangle, endPointTriangle;
+    public PathChain pickup3Ball3, endPickup3, score3Triangle, endPointTriangle,doNothingTriangle;
 
     /**
      * Constructor for the Paths class.
@@ -74,7 +72,7 @@ public class RedPaths {
                 .build();
 
         pickup2TriangleCurve = follower.pathBuilder()
-                .addPath(new BezierCurve(shootPointTriangle,pickup2PoseCurve,pickup2Pose))
+                .addPath(new BezierCurve(shootPointTriangle,pickup2PoseCurveTriangle,pickup2Pose))
                 .setTangentHeadingInterpolation()
                 .build();
 
@@ -117,6 +115,7 @@ public class RedPaths {
                 .addPath(new BezierLine(pickup3Pose3, endPickup3Pose))
                 .setLinearHeadingInterpolation( pickup3Pose3.getHeading(), endPickup3Pose.getHeading())
                 .build();
+
 
         //  From Goal Paths
         //  From Goal Paths
@@ -187,5 +186,10 @@ public class RedPaths {
                 .addPath(new BezierLine(shootPointTriangle, pickup3Pose))
                 .setLinearHeadingInterpolation(shootPointTriangle.getHeading(), pickup3Pose.getHeading())
                 .build();
+        doNothingTriangle = follower.pathBuilder()  //Finish spot
+                .addPath(new BezierLine(shootPointTriangle, doNothingPose))
+                .setLinearHeadingInterpolation(shootPointTriangle.getHeading(), doNothingPose.getHeading())
+                .build();
+
     }
 }

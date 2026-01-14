@@ -4,24 +4,24 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Auto Triangle", preselectTeleOp = "Red Telop")
-public class RedPedroAutoTriangle extends BaseAutonomous {
+@Autonomous(name = "Blue DO NOTHING", preselectTeleOp = "Blue Telop")
+public class BlueDoNothing extends BaseAutonomous {
 
-    // This class only needs to contain what is UNIQUE to the Red side.
-    private RedPaths paths;
+    // This class only needs to contain what is UNIQUE to the Blue side.
+    private BluePaths paths;
 
     // 1. Implement the required abstract methods
     @Override
     protected void buildPaths() {
-        // The RedPaths class handles creating the unique paths for the Red side
-        paths = new RedPaths(follower);
+        // The BluePaths class handles creating the unique paths for the blue side
+        paths = new BluePaths(follower);
         paths.buildPaths();
     }
 
     @Override
     protected void setStartingPose() {
-        // Set the specific starting pose for the Red side
-        follower.setPose(RedPaths.startPoseTriangle);
+        // Set the specific starting pose for the blue side
+        follower.setPose(BluePaths.startPoseTriangle);
     }
 
     public void autonomousPathUpdate() {
@@ -35,7 +35,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
 
                 // 4. Start driving the path (non-blocking which is the falst command)
                 follower.followPath(paths.scorePreloadTriangle, false);
-                follower.setMaxPower(.6);
+                follower.setMaxPower(1);
 
                 // 5. Immediately go to the waiting state.
                 setPathState(PathState.WAIT_FOR_SPIN);
@@ -52,9 +52,9 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     // Preload scored. Move to the next action.
                     pickupManager.start();
                     pickupManager.setTotalBallCount(0);
-                    follower.followPath(paths.pickup3Triangle);
+                    follower.followPath(paths.doNothingTriangle);
                     follower.setMaxPower(.9);
-                    setPathState(PathState.DRIVE_PICKUP3);
+                    setPathState(PathState.END);
                 }
                 break;
             case SCORE1:
@@ -64,9 +64,10 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                             // scored pickup 1, drive to pickup 2
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
-                            follower.followPath(paths.pickup2Triangle);
+                            follower.followPath(paths.pickup3Triangle);
                             follower.setMaxPower(.9);
-                            setPathState(PathState.DRIVE_PICKUP2);
+                            intakeActive.intakeOff();
+                            setPathState(PathState.END);
                         }
                     }
                 }

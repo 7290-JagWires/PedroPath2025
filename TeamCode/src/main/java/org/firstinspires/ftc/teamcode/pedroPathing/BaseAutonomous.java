@@ -30,7 +30,7 @@ public abstract class BaseAutonomous extends OpMode {
     static final int PICKUP_ROW1_PPG = 23;  //ROBOT LOADED PURPLE SHOOT, PURPLE UP NEXT, GREEN JUST LOADED COMPARTMENTS
     static final int PICKUP_ROW2_PGP = 22;  //ROBOT LOADED PURPLE SHOOT, PURPLE UP NEXT, GREEN JUST LOADED COMPARTMENTS
     static final int PICKUP_ROW3_GPP = 21;  //ROBOT LOADED PURPLE SHOOT, PURPLE UP NEXT, GREEN JUST LOADED COMPARTMENTS
-    static final double DOOR_TIMER_DELAY = 2.75;
+    static final double DOOR_TIMER_DELAY = 2;
     static final double PICKUP_MISSED_BALL_TIMER_DELAY = 2.75;
 
     private static final int TICKS_PER_COMPARTMENT = 1354;
@@ -143,6 +143,9 @@ public abstract class BaseAutonomous extends OpMode {
         telemetry.addData("x", follower.getPose().getX());
         telemetry.addData("y", follower.getPose().getY());
         telemetry.addData("heading", follower.getPose().getHeading());
+        telemetry.addData("Shooter Speed",shooter.getVelocity());
+
+
     }
 
     public void setPathState(PathState newState){

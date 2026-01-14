@@ -4,8 +4,8 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Auto Triangle", preselectTeleOp = "Red Telop")
-public class RedPedroAutoTriangle extends BaseAutonomous {
+@Autonomous(name = "Red DO NOTHING", preselectTeleOp = "Red Telop")
+public class RedDoNothing extends BaseAutonomous {
 
     // This class only needs to contain what is UNIQUE to the Red side.
     private RedPaths paths;
@@ -52,9 +52,9 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
                     // Preload scored. Move to the next action.
                     pickupManager.start();
                     pickupManager.setTotalBallCount(0);
-                    follower.followPath(paths.pickup3Triangle);
+                    follower.followPath(paths.doNothingTriangle);
                     follower.setMaxPower(.9);
-                    setPathState(PathState.DRIVE_PICKUP3);
+                    setPathState(PathState.END);
                 }
                 break;
             case SCORE1:
