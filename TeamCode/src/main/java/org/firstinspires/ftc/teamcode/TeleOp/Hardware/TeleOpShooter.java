@@ -11,8 +11,11 @@ public class TeleOpShooter {
     private final DcMotorEx shooter;
 
     // POWER MODE CONSTANTS
-    private static final double SHOOTER_FORWARD = 0.9;
-    private static final double SHOOTER_REVERSE = -0.9;
+    //private static final double SHOOTER_FORWARD = 0.9;
+    //private static final double SHOOTER_REVERSE = -0.9;
+
+    private static final double SHOOTER_FORWARD_LONG_GOAL = 1.0;
+    private static final double SHOOTER_FORWARD_SHORT_GOAL = 0.75;
     private static final double SHOOTER_OFF     = 0.0;
 
     public TeleOpShooter(HardwareMap hardwareMap, LinearOpMode opMode) {
@@ -36,15 +39,12 @@ public class TeleOpShooter {
     public void run() {
 
         if (opMode.gamepad2.right_bumper) {
-            stopFast();     // active braking
-        }
-        else if (opMode.gamepad2.left_trigger > 0.1) {
             shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            shooter.setPower(SHOOTER_REVERSE);
+            shooter.setPower(SHOOTER_FORWARD_LONG_GOAL);
         }
         else {
             shooter.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-            shooter.setPower(SHOOTER_FORWARD);
+            shooter.setPower(SHOOTER_FORWARD_SHORT_GOAL);
         }
     }
 

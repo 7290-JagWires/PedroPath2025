@@ -11,7 +11,7 @@ public class TeleOpMecanumDrive {
     private final TeleOpDriveTrain driveTrain;
     private final BNO055IMU imu;
     private boolean fieldCentric = false; // toggle state
-    private double driveScale = 0.65;
+    private double driveScale = 0.75;
 
     // ---------------- PINPOINT HEADING SUPPORT ----------------
     private double pinpointHeading = 0;

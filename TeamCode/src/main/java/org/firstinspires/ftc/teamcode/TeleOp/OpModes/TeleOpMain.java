@@ -3,8 +3,15 @@ package org.firstinspires.ftc.teamcode.TeleOp.OpModes;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
-
 import org.firstinspires.ftc.teamcode.TeleOp.Hardware.TeleOpRobot;
+import org.firstinspires.ftc.teamcode.TeleOp.Hardware.TeleOpBallColorClassifier;
+import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TeleOpGoBildaRgbIndicator;
+
+import com.qualcomm.robotcore.hardware.ColorSensor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+
+
 
 @TeleOp(name = "TeleOpMain", group = "Linear Opmode")
 public class TeleOpMain extends LinearOpMode {
@@ -18,6 +25,11 @@ public class TeleOpMain extends LinearOpMode {
 
     private ElapsedTime launchTimer = new ElapsedTime();
 
+    private ColorSensor colorSensor;
+
+    private TeleOpGoBildaRgbIndicator indicator;
+
+
     @Override
     public void runOpMode() {
 
@@ -26,27 +38,9 @@ public class TeleOpMain extends LinearOpMode {
 
         robot = new TeleOpRobot(hardwareMap, this);
 
-        // ---------------------- AUTO-HOME DURING INIT ----------------------
-//        boolean homed = false;
-//
-//        while (opModeInInit()) {
-//
-//            if (!homed) {
-//                robot.spindexerMotor.setModeRunUsingEncoder();
-//                robot.spindexerMotor.setPower(0.18);
-//
-//                if (robot.spindexerMag.isTriggered()) {
-//                    robot.spindexerMotor.stop();
-//               //     robot.spindexerMotor.resetEncoder();
-//               //     robot.spindexerLogic.setCompartment(1);
-//                    homed = true;
-//                }
-//            }
-//
-//            telemetry.addData("Spindexer Homed?", homed);
-//            telemetry.update();
-//            idle();
-//        }
+        colorSensor = hardwareMap.get(ColorSensor.class, "color_sensor");
+
+        indicator = new TeleOpGoBildaRgbIndicator(hardwareMap, "rgbServo");
 
         // --------------------------- PLAY STARTS ---------------------------
         //Wait for the driver to press play
@@ -57,7 +51,7 @@ public class TeleOpMain extends LinearOpMode {
         telemetry.update();
 
         robot.spindexerMotor.setModeRunUsingEncoder();
-        robot.spindexerMotor.setPower(0.18);
+        robot.spindexerMotor.setPower(0.5);
 
         // Run until magnet is triggered or stop is pressed
         while (opModeIsActive() && !robot.spindexerMag.isTriggered()) {
@@ -70,10 +64,57 @@ public class TeleOpMain extends LinearOpMode {
         telemetry.addLine("Homing Complete. Start Driving.");
         telemetry.update();
 
-// --------------------------- MAIN LOOP --------------------------
+        // --------------------------- MAIN LOOP --------------------------
         int dumpCount = 0;
 
         while (opModeIsActive()) {
+
+            // ------------ READ COLOR SENSOR EACH LOOP ------------
+            int red = colorSensor.red();
+            int green = colorSensor.green();
+            int blue = colorSensor.blue();
+
+            // Read distance from the same sensor
+            double distanceCm = ((DistanceSensor) colorSensor)
+                    .getDistance(DistanceUnit.CM);
+
+            // Determine if a ball is present
+            //boolean ballPresent = distanceCm < 2.0;  // Alpha tells us how much light is bouncing back into the sensor.
+            boolean ballPresent =
+                    distanceCm < 4.0 || colorSensor.alpha() > 150;
+
+
+
+//            BallColorClassifier.BallColor color =
+//                    BallColorClassifier.classify(red, green, blue);
+
+            TeleOpBallColorClassifier.BallColor color =
+                    ballPresent
+                            ? TeleOpBallColorClassifier.classify(red, green, blue)
+                            : TeleOpBallColorClassifier.BallColor.UNKNOWN;
+
+
+            if (color == TeleOpBallColorClassifier.BallColor.PURPLE) {
+                indicator.setPurple();
+            }
+
+            else if (color == TeleOpBallColorClassifier.BallColor.GREEN) {
+                indicator.setGreen();
+            }
+
+            else  {
+                indicator.off();
+            }
+
+            String detectedLabel = (color == TeleOpBallColorClassifier.BallColor.UNKNOWN)
+                    ? "No Ball"
+                    : color.toString();
+
+            telemetry.addData("Color (RGB)", "%d, %d, %d", red, green, blue);
+            telemetry.addData("Detected Color", detectedLabel);
+            telemetry.addData("Distance (cm)", "%.2f", distanceCm);
+            telemetry.addData("Ball Present", ballPresent);
+
 
             // ===================== DUMP-ALL TOGGLE (RT) =====================
             boolean rt = gamepad2.right_trigger > 0.6;
@@ -89,7 +130,6 @@ public class TeleOpMain extends LinearOpMode {
 
             // --------------------------- DUMP MODE ---------------------------
             if (dumpMode) {
-
                 // Keep door open the whole time
                 robot.door.forceOpenLock();
                 // Rotate through 3 compartments one time
@@ -110,32 +150,15 @@ public class TeleOpMain extends LinearOpMode {
 
             // -------------------------- DRIVER 2 CONTROLS --------------------------
 
-            // Manual homing (DPAD UP)
-//            if (gamepad2.dpad_up) {
-//
-//                robot.spindexerMotor.setModeRunUsingEncoder();
-//                robot.spindexerMotor.setPower(0.4);
-//
-//                while (opModeIsActive() && !robot.spindexerMag.isTriggered()) {
-//                    idle();
-//                }
-//
-//                robot.spindexerMotor.stop();
-//                robot.spindexerMotor.resetEncoder();
-//                robot.spindexerLogic.setCompartment(1);
-//            }
-
             // *** FIXED: A moves to next compartment ***
             if (gamepad2.a) {
                 robot.spindexerLogic.nextCompartment();
             }
 
-
-
             // *** ADDED: B moves to previous compartment ***
-            if (gamepad2.b) {                robot.spindexerLogic.previousCompartment();
+            if (gamepad2.b) {
+                robot.spindexerLogic.previousCompartment();
             }
-
 
             // If we are dumping and we've waited at least the launch delay milliseconds, move to the next compartment
             if( dumpMode && launchTimer.milliseconds() > LAUNCH_DELAY_MILLISECONDS ){
@@ -154,9 +177,7 @@ public class TeleOpMain extends LinearOpMode {
                     launchTimer.reset();
                     telemetry.addLine("dumpCount: " + dumpCount);
                 }
-
                 telemetry.addLine("hit limit switch");
-
             }
 
             robot.update();
@@ -167,17 +188,19 @@ public class TeleOpMain extends LinearOpMode {
                 robot.spindexerLogic.justIndexed = false;
             }
 
+
+
             // --------------------------- TELEMETRY ---------------------------
-            //telemetry.addData("Dump Mode", dumpMode);
+            telemetry.addData("Dump Mode", dumpMode);
             telemetry.addData("Intake Comp", robot.spindexerLogic.getIntakeCompartment());
             telemetry.addData("Shooter Comp", robot.spindexerLogic.getShooterCompartment());
             telemetry.addData("Next Up", robot.spindexerLogic.getNextUpCompartment());
             telemetry.addData("Encoder", robot.spindexerMotor.getCurrentPosition());
-            //telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
+            telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
             telemetry.update();
 
             idle();
-        }
+        } // <--- END OF WHILE LOOP
 
         robot.stopAll();
     }

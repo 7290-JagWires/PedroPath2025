@@ -10,7 +10,7 @@ public class TeleOpSpindexerIndexerLogic {
     private final TeleOpSpindexerMotor motor;
     private final TeleOpMagneticLimitSwitch limit;
 
-    private static final double INDEX_POWER = 0.50;
+    private static final double INDEX_POWER = 0.75;
 
     private final int ticksPerCompartment;
 
