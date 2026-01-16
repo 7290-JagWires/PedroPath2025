@@ -19,8 +19,9 @@ public class TeleOpShooter {
     //private static final double SHOOTER_POWER_FRONT_GOAL = 0.75;
     //private static final double SHOOTER_OFF     = 0.0;
 
-    private static final double SHOOTER_VELOCITY_BACK_GOAL = 2550;
-    private static final double SHOOTER_VELOCITY_FRONT_GOAL = 1970;
+    public static final double SHOOTER_VELOCITY_BACK_GOAL = 2550;
+    public static final double SHOOTER_VELOCITY_FRONT_GOAL = 1970;
+    public static final double SHOOTER_DEFENSE_GOAL = 2200;
 
     //private static final double SHOOTER_TICKS_PER_REV = 28;
 
@@ -37,7 +38,7 @@ public class TeleOpShooter {
         shooter.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         shooter.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        shooter.setVelocity(0);
+        shooter.setVelocity(SHOOTER_VELOCITY_FRONT_GOAL);
     }
 
 
@@ -54,6 +55,17 @@ public class TeleOpShooter {
             shooter.setVelocity(SHOOTER_VELOCITY_FRONT_GOAL);
         }
     }
+
+    /**
+     * Overrides the default and sets the shooter to a specific velocity.
+     * Useful for distance-based shooting.
+     *
+     * @param velocity The specific target velocity in ticks per second.
+     */
+    public void setExplicitVelocity(double velocity) {
+        shooter.setVelocity(velocity);
+    }
+
 
 //    // -------------------------------------------------------------
 //    // ACTIVE BRAKING (FAST STOP)

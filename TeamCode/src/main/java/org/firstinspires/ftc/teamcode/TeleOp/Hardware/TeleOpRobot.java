@@ -6,6 +6,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import org.firstinspires.ftc.teamcode.TeleOp.Drive.TeleOpMecanumDrive;
 import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TeleOpMagneticLimitSwitch;
 import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TeleOpPinpointLocalizer;
+import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TelopLimelightCamera;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
 
 public class TeleOpRobot {
 
@@ -19,13 +21,16 @@ public class TeleOpRobot {
     public final TeleOpDoor door;
     public final TeleOpPinpointLocalizer pinpoint;
 
+    public final TelopLimelightCamera limelight; // Make sure to add your LimelightCamera
+
+
     // Spindexer
     public final TeleOpSpindexerMotor spindexerMotor;
     public final TeleOpMagneticLimitSwitch spindexerMag;
     public final TeleOpSpindexerIndexerLogic spindexerLogic;
     private static final int TICKS_PER_COMPARTMENT = 1354;   // <— update with real measured value
 
-    public TeleOpRobot(HardwareMap hardwareMap, LinearOpMode opMode) {
+    public TeleOpRobot(HardwareMap hardwareMap, LinearOpMode opMode, int pipeline) {
         this.opMode = opMode;
 
         // Hardware layer
@@ -51,6 +56,13 @@ public class TeleOpRobot {
 
         // Odometry
         pinpoint = new TeleOpPinpointLocalizer(hardwareMap);
+
+        // *** FIX 1: INITIALIZE THE LIMELIGHT CAMERA ***
+        limelight = new TelopLimelightCamera(opMode.hardwareMap, "limelight");
+
+        // Initialize the Limelight
+        limelight.setPipeline(pipeline); // Make sure it's on your AprilTag pipeline  Blue 1 & Red 2
+        limelight.start();
     }
 
     public void update() {
@@ -58,7 +70,7 @@ public class TeleOpRobot {
         spindexerLogic.update();
 
         intakeActive.run();
-        shooter.run();
+//        shooter.run();
         door.run();
     }
 

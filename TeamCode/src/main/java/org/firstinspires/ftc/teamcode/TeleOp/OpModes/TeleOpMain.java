@@ -10,13 +10,18 @@ import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TeleOpGoBildaRgbIndicator;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-
+import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TelopLimelightCamera;
+import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
 
 
 @TeleOp(name = "TeleOpMain", group = "Linear Opmode")
 public class TeleOpMain extends LinearOpMode {
 
     private static final int LAUNCH_DELAY_MILLISECONDS = 1000;
+
+    public boolean tagDetectionLogicHasRun = false;
+    private int bluePipeline = 1;   //Blue Pipeline
+    private int startingTagId = -1;
 
     private TeleOpRobot robot;
 
@@ -36,7 +41,7 @@ public class TeleOpMain extends LinearOpMode {
         telemetry.addLine("Initializing...");
         telemetry.update();
 
-        robot = new TeleOpRobot(hardwareMap, this);
+        robot = new TeleOpRobot(hardwareMap, this, bluePipeline);
 
         colorSensor = hardwareMap.get(ColorSensor.class, "color_sensor");
 
@@ -68,6 +73,11 @@ public class TeleOpMain extends LinearOpMode {
         int dumpCount = 0;
 
         while (opModeIsActive()) {
+            //Limelight updates
+            TelopLimelightCamera.TagData detectedTag = robot.limelight.getAprilTagData();
+
+            // automatically adjust shooter velocity
+            robot.limelight.updateShooterVelocityBasedOnDistance(robot, detectedTag);
 
             // ------------ READ COLOR SENSOR EACH LOOP ------------
             int red = colorSensor.red();
@@ -198,6 +208,17 @@ public class TeleOpMain extends LinearOpMode {
             //telemetry.addData("Next Up", robot.spindexerLogic.getNextUpCompartment());
             telemetry.addData("Encoder", robot.spindexerMotor.getCurrentPosition());
             telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
+
+            // Check if a tag was found
+            if (detectedTag != null) {
+                // Now you have all the data in a clean object!
+                telemetry.addData("Tag ID", detectedTag.id);
+//                telemetry.addData("Angle to Camera (deg) (Tx)", "%.2f", detectedTag.tx);
+//                telemetry.addData("Angle from camera to center of Target (Ty)", "%.2f", detectedTag.ty);
+                telemetry.addData("Exact distance from camera to tag", "%.2f", detectedTag.distance);
+            } else {
+                telemetry.addLine("No tags in view");
+            }
             telemetry.update();
 
             idle();
