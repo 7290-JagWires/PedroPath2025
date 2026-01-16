@@ -6,6 +6,7 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -13,6 +14,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.GamepadManager;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera.TagData;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Robot;
 
+@Disabled
 @TeleOp(name = "Red Telop")
 public class RedTelop extends OpMode {
 

@@ -8,6 +8,7 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.VELOC
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.geometry.Pose;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -24,6 +25,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Utilities;
 
 import kotlin.time.Instant;
 
+@Disabled
 @TeleOp(name = "Blue Telop")
 public class BlueTelop extends OpMode {
 

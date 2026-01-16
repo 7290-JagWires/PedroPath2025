@@ -4,7 +4,7 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Auto Triangle", preselectTeleOp = "Red Telop")
+@Autonomous(name = "Red Auto Triangle", preselectTeleOp = "TeleOpMain")
 public class RedPedroAutoTriangle extends BaseAutonomous {
 
     // This class only needs to contain what is UNIQUE to the Red side.

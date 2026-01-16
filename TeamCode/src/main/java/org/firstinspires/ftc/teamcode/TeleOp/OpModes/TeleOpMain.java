@@ -191,10 +191,11 @@ public class TeleOpMain extends LinearOpMode {
 
 
             // --------------------------- TELEMETRY ---------------------------
-            telemetry.addData("Dump Mode", dumpMode);
-            telemetry.addData("Intake Comp", robot.spindexerLogic.getIntakeCompartment());
-            telemetry.addData("Shooter Comp", robot.spindexerLogic.getShooterCompartment());
-            telemetry.addData("Next Up", robot.spindexerLogic.getNextUpCompartment());
+            telemetry.addData("Shooter RPM", "%.0f", robot.shooter.getRpm());
+            //telemetry.addData("Dump Mode", dumpMode);
+            //telemetry.addData("Intake Comp", robot.spindexerLogic.getIntakeCompartment());
+            //telemetry.addData("Shooter Comp", robot.spindexerLogic.getShooterCompartment());
+            //telemetry.addData("Next Up", robot.spindexerLogic.getNextUpCompartment());
             telemetry.addData("Encoder", robot.spindexerMotor.getCurrentPosition());
             telemetry.addData("Magnet", robot.spindexerMag.isTriggered());
             telemetry.update();
