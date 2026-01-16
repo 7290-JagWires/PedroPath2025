@@ -1,17 +1,21 @@
-package org.firstinspires.ftc.teamcode.pedroPathing.examples;
+package org.firstinspires.ftc.teamcode.TeleOp.OpModes;
 
 // Import your new class
-import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
+
+import static org.firstinspires.ftc.teamcode.TeleOp.Sensors.TelopLimelightCamera.GOAL_TAG_HEIGHT;
+
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TelopLimelightCamera;
+import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
+
 import java.util.List;
 
-@TeleOp(name = "Test: Limelight AprilTags", group = "Test")
-@Disabled
+@TeleOp(name = "Test: TELOP CAMERA", group = "Test")
+//@Disabled
 public class TestLimelightAprilTag extends LinearOpMode {
 
     @Override
@@ -20,10 +24,10 @@ public class TestLimelightAprilTag extends LinearOpMode {
         telemetry.update();
 
         // Make sure the device name here matches your Driver Station config
-        LimelightCamera limelight = new LimelightCamera(hardwareMap, "limelight");
+        TelopLimelightCamera limelight = new TelopLimelightCamera(hardwareMap, "limelight");
 
         // Select the AprilTag pipeline (0 for tags 21, 22 & 23)
-        limelight.setPipeline(0);
+        limelight.setPipeline(1);
 
         // Start the data polling thread
         limelight.start();
@@ -47,7 +51,7 @@ public class TestLimelightAprilTag extends LinearOpMode {
                     LLResultTypes.FiducialResult tag = tags.get(0);
 
                     // distance function we created to
-                    double tagDistance = limelight.getDistanceToTarget(result, LimelightCamera.OBELISK_HEIGHT);
+                    double tagDistance = limelight.getDistanceToTarget(GOAL_TAG_HEIGHT);
 
                     telemetry.addData("Tag ID", limelight.getTagId());
                     telemetry.addData("Angle from camera to center of Target (Ty)", result.getTy());
