@@ -27,6 +27,13 @@ public class TelopLimelightCamera {
     private static final double LIMELIGHT_MOUNT_ANGLE_DEGREES = 0; //OLD Mount19.83;
     private static final double LIMELIGHT_LENS_HEIGHT_INCHES = 9.25;
     private static final boolean IS_LIMELIGHT_INVERTED = true;
+    public LLResult result;
+    private LLResultTypes.FiducialResult tag;
+    public double tagDistance = 0;
+    public int tagID = 0;
+    public double tagXAngle = 0;
+    public double tagYAngle = 0;
+
     private static final int GPP = 21;
     private static final int PGP = 22;
     private static final int PPG = 23;
@@ -112,35 +119,32 @@ public class TelopLimelightCamera {
      * Processes the latest Limelight result to find the primary AprilTag and returns its data.
      * This combines getting the result, checking for validity, and calculating distance.
      *
-     * @return A {@link TagData} object containing the tag's info, or {@code null} if no tag is found.
      */
-    public TagData getAprilTagData() {
-        LLResult result = getLatestResult();
+    public void getAprilTagData() {
+        result = getLatestResult();
 
         // Check if the result is valid and has detected any fiducial tags
         if (result != null && result.isValid() && !result.getFiducialResults().isEmpty()) {
 
             // Look at the first tag detected
-            LLResultTypes.FiducialResult tag = result.getFiducialResults().get(0);
+            tag = result.getFiducialResults().get(0);
 
             // Calculate the distance to the tag
-            double distance = getDistanceToTarget(result, GOAL_TAG_HEIGHT);
-
-            // Create and return a new TagData object with all the information
-            return new TagData(tag.getFiducialId(), distance, result.getTx(), result.getTy());
+            tagDistance = getDistanceToTarget(GOAL_TAG_HEIGHT);
+            tagID = tag.getFiducialId();
+            tagXAngle = result.getTx();
+            tagYAngle = result.getTy();
         }
-
-        // If no valid tag is found, return null
-        return null;
     }
+
     /**
      * Calculates the horizontal distance to a target based on its height and the camera's vertical angle.
      *
-     * @param result         The LLResult containing the target data.
      * @param goalHeightInches The known height of the AprilTag target from the floor.
      * @return The calculated distance to the target in inches.
      */
-    public double getDistanceToTarget(LLResult result, double goalHeightInches) {
+    public double getDistanceToTarget(double goalHeightInches) {
+
         if (result == null || !result.isValid()) {
             return 0.0; // Return 0 or an invalid value if no target is seen
         }
@@ -169,37 +173,22 @@ public class TelopLimelightCamera {
             return distanceToTargetInches;
         }
     }
-    /**
-     * A simple data class to hold the processed information from a detected AprilTag.
-     * This is a "public static nested class", which allows it to be public
-     * while still living inside the LimelightCamera.java file.
-     */
-    public class TagData {
-        public final int id;
-        public final double distance;
-        public final double tx; // Horizontal angle
-        public final double ty; // Vertical angle
 
-        public TagData(int id, double distance, double tx, double ty) {
-            this.id = id;
-            this.distance = distance;
-            this.tx = tx;
-            this.ty = ty;
-        }
-    }
-    public void updateShooterVelocityBasedOnDistance(TeleOpRobot robot, TagData detectedTag) {
+    public void updateShooterVelocityBasedOnDistance(TeleOpRobot robot) {
 
-        if (detectedTag != null) {
+        if (result != null) {
             // If a tag is visible, adjust velocity based on its distance
-            if (detectedTag.distance > 70  && detectedTag.distance < 115) {
+            if (tagDistance > 70  && tagDistance < 115) {
                 robot.shooter.setExplicitVelocity(SHOOTER_DEFENSE_GOAL);
-            } else if (detectedTag.distance >= 115) {
+            } else if (tagDistance >= 115) {
                 robot.shooter.setExplicitVelocity(SHOOTER_VELOCITY_BACK_GOAL);
             } else {
                 // If the tag is at a medium distance, use the defense velocity
                 robot.shooter.setExplicitVelocity(SHOOTER_VELOCITY_FRONT_GOAL);
             }
         }
+        else
+            robot.shooter.setExplicitVelocity(SHOOTER_VELOCITY_FRONT_GOAL);
     }
 }
 

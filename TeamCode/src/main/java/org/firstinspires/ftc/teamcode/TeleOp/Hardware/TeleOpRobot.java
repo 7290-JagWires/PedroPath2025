@@ -30,7 +30,7 @@ public class TeleOpRobot {
     public final TeleOpSpindexerIndexerLogic spindexerLogic;
     private static final int TICKS_PER_COMPARTMENT = 1354;   // <— update with real measured value
 
-    public TeleOpRobot(HardwareMap hardwareMap, LinearOpMode opMode, int pipeline) {
+    public TeleOpRobot(HardwareMap hardwareMap, LinearOpMode opMode) {
         this.opMode = opMode;
 
         // Hardware layer
@@ -59,10 +59,6 @@ public class TeleOpRobot {
 
         // *** FIX 1: INITIALIZE THE LIMELIGHT CAMERA ***
         limelight = new TelopLimelightCamera(opMode.hardwareMap, "limelight");
-
-        // Initialize the Limelight
-        limelight.setPipeline(pipeline); // Make sure it's on your AprilTag pipeline  Blue 1 & Red 2
-        limelight.start();
     }
 
     public void update() {
