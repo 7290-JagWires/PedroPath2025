@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode.pedroPathing;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.TestingFerrisWheel;
 
+@Disabled
 @TeleOp(name = "Test Ferris Wheel", group = "Test")
 public class TestFerrisWheelTeleOp extends OpMode {
 

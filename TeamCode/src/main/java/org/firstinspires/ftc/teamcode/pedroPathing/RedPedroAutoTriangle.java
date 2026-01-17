@@ -4,7 +4,7 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Red Auto Triangle", preselectTeleOp = "TeleOpMain")
+@Autonomous(name = "Red Auto Triangle", preselectTeleOp = "RedTeleOpMain")
 public class RedPedroAutoTriangle extends BaseAutonomous {
 
     // This class only needs to contain what is UNIQUE to the Red side.
@@ -241,7 +241,7 @@ public class RedPedroAutoTriangle extends BaseAutonomous {
             case DRIVE_PICKUP3:
                 if (!follower.isBusy()) {
                     follower.followPath(paths.pickup3Ball2);
-                    follower.setMaxPower(.6);
+                    follower.setMaxPower(1);
                     pathTimer.resetTimer(); // Start the timer for the first pickup attempt
                     pathState = PathState.DRIVE_PICKUP3BALL2_END;
                 }

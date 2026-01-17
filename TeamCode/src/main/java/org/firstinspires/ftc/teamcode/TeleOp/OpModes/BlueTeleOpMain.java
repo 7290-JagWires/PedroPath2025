@@ -10,11 +10,10 @@ import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TeleOpGoBildaRgbIndicator;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.TeleOp.Sensors.TelopLimelightCamera;
 
 
-@TeleOp(name = "TeleOpMain", group = "Linear Opmode")
-public class TeleOpMain extends LinearOpMode {
+@TeleOp(name = "BlueTeleOpMain", group = "Linear Opmode")
+public class BlueTeleOpMain extends LinearOpMode {
 
     private static final int LAUNCH_DELAY_MILLISECONDS = 1000;
 

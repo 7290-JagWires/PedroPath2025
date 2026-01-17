@@ -4,7 +4,7 @@ import static org.firstinspires.ftc.teamcode.pedroPathing.Hardware.Shooter.SHOOT
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
-@Autonomous(name = "Blue Auto Triangle", preselectTeleOp = "TeleOpMain")
+@Autonomous(name = "Blue Auto Triangle", preselectTeleOp = "BlueTeleOpMain")
 public class BluePedroAutoTriangle extends BaseAutonomous {
 
     // This class only needs to contain what is UNIQUE to the Blue side.
@@ -35,7 +35,7 @@ public class BluePedroAutoTriangle extends BaseAutonomous {
 
                 // 4. Start driving the path (non-blocking which is the falst command)
                 follower.followPath(paths.scorePreloadTriangle, false);
-                follower.setMaxPower(1);
+                follower.setMaxPower(.5);
 
                 // 5. Immediately go to the waiting state.
                 setPathState(PathState.WAIT_FOR_SPIN);

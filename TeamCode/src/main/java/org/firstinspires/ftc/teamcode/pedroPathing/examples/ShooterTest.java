@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.pedroPathing.examples;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -9,8 +10,8 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 
+@Disabled
 @TeleOp()
-//@Disabled
 public class ShooterTest extends LinearOpMode {
 
 	static final double SHOOTER_VELOCITY_STOP = 0.0;

@@ -180,9 +180,11 @@ public class TelopLimelightCamera {
             // If a tag is visible, adjust velocity based on its distance
             if (tagDistance > 70  && tagDistance < 115) {
                 robot.shooter.setExplicitVelocity(SHOOTER_DEFENSE_GOAL);
-            } else if (tagDistance >= 115) {
+            } else if (tagDistance >= 115  && tagDistance < 135) {
                 robot.shooter.setExplicitVelocity(SHOOTER_VELOCITY_BACK_GOAL);
-            } else {
+            } else if (tagDistance >= 135) {
+                robot.shooter.setExplicitVelocity(2750);
+            }else {
                 // If the tag is at a medium distance, use the defense velocity
                 robot.shooter.setExplicitVelocity(SHOOTER_VELOCITY_FRONT_GOAL);
             }

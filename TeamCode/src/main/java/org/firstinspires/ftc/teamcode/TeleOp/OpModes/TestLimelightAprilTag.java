@@ -6,6 +6,7 @@ import static org.firstinspires.ftc.teamcode.TeleOp.Sensors.TelopLimelightCamera
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.LLResultTypes;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -15,7 +16,7 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Hardware.LimelightCamera;
 import java.util.List;
 
 @TeleOp(name = "Test: TELOP CAMERA", group = "Test")
-//@Disabled
+@Disabled
 public class TestLimelightAprilTag extends LinearOpMode {
 
     @Override
