@@ -16,10 +16,10 @@ public class BluePaths {
     private Follower follower;
 
     // Poses can be public and static so they can be accessed from anywhere
-    public static final Pose startPose = new Pose(15, 116, Math.toRadians(25));  //was 115 at house
+    public static final Pose startPose = new Pose(17, 116, Math.toRadians(25));  //was 115 at house
     public static final Pose startPoseTriangle = new Pose(57, 8, Math.toRadians(90));
-    public static final Pose shootPoint = new Pose(54, 97, Math.toRadians(160));
-    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(128));
+    public static final Pose shootPoint = new Pose(54, 94, Math.toRadians(163));
+    public static final Pose shootPointTriangle = new Pose(56, 18, Math.toRadians(124));
 
     //Common poses for all programs
     public static final Pose pickup1Pose = new Pose(42, 82, Math.toRadians(180));

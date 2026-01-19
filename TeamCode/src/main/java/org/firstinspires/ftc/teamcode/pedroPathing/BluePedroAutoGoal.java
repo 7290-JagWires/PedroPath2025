@@ -99,7 +99,7 @@ public class BluePedroAutoGoal extends BaseAutonomous {
                             pickupManager.start();
                             pickupManager.setTotalBallCount(0);
                             follower.followPath(paths.pickup2);
-                            follower.setMaxPower(.8);
+                            follower.setMaxPower(1);
                             setPathState(PathState.DRIVE_PICKUP2);
                         }
                     }
